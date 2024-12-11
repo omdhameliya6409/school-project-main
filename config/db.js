@@ -1,11 +1,6 @@
 const mongoose = require("mongoose");
 
 const dbconnect = async () => {
-    // Check if the CONNECTION_STRING environment variable is set
-    if (!process.env.CONNECTION_STRING) {
-        console.error("MongoDB URI is not defined in the environment variables.");
-        process.exit(1); // Exit the process with failure code
-    }
 
     try {
         // Try connecting to MongoDB using the URI from the environment variable
