@@ -21,6 +21,7 @@ const app = express();
 const allowedOrigins = [
   "https://school-project-main.onrender.com", // Render frontend URL
   "http://localhost:3001", // Local development (frontend running on localhost:3000)
+  "http://192.168.31.130:8000", // Allow access from local IP address (your server machine)
   // Add any other allowed origins here
 ];
 
@@ -69,7 +70,7 @@ app.use("/dashboard", dashboardRoutes);
 app.use("/students", studentRoutes);
 app.use('/Admission', admissionRoutes);
 app.use(principalRoutes);
-app.set('trust proxy', 2); // પ્રથમ પ્રોક્સી પર વિશ્વાસ રાખો
+app.set('trust proxy', 2); // Trust the second proxy in the chain
 
 // Test Route
 app.get('/hello', (req, res) => {
@@ -84,6 +85,6 @@ app.use((err, req, res, next) => {
 
 // Start Server
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {  // Binding to 0.0.0.0 allows external devices to connect
+  console.log(`🚀 Server is running at http://192.168.31.130:${PORT}`);
 });
