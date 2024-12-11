@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+require('dotenv').config();
 const dbconnect = async () => {
   try {
     const uri = process.env.MONGO_URL; // Get the connection string from .env
