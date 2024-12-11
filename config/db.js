@@ -1,17 +1,20 @@
 const mongoose = require('mongoose');
 
 const dbconnect = async () => {
-  try {
-    const connection = await mongoose.connect(process.env['MONGO-URL'], {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      dbName: "school-project-main", // Add the database name explicitly
-    });
-    console.log(`✅ Connected to MongoDB: ${connection.connection.host}`);
-  } catch (error) {
-    console.error(`❌ Error connecting to the database: ${error.message}`);
-    process.exit(1); // Stop the process if the database connection fails
-  }
+    try {
+        const uri = process.env['MONGO-URL']; // Ensure this matches your .env key
+        if (!uri) {
+            throw new Error("MongoDB connection URI is undefined.");
+        }
+        await mongoose.connect(uri, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log("✅ Connected to MongoDB!");
+    } catch (error) {
+        console.error("❌ Error connecting to the database:", error.message);
+        process.exit(1); // Exit the process if DB connection fails
+    }
 };
 
 module.exports = dbconnect;
