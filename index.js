@@ -73,7 +73,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => { // Bind to 0.0.0.0 to allow external devices to connect
-  console.log(`🚀 Server is running at http://0.0.0.0:${PORT}`);
+  console.log(`🚀 Server is running at http:localhost:${PORT}`);
 });

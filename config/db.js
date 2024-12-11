@@ -1,17 +1,17 @@
 const mongoose = require('mongoose');
 
 const dbconnect = async () => {
-    try {
-        const uri = process.env['MONGO-URL'];
-        if (!uri) {
-            throw new Error("MongoDB connection URI is undefined.");
-        }
-        await mongoose.connect(uri);  // No need to specify useNewUrlParser and useUnifiedTopology
-        console.log("✅ Connected to MongoDB!");
-    } catch (error) {
-        console.error("❌ Error connecting to the database:", error.message);
-        process.exit(1); // Exit the process if DB connection fails
+  try {
+    const uri = process.env.MONGO_URL; // Get the connection string from .env
+    if (!uri) {
+      console.error('❌ MongoDB URI is undefined!');
+      return;
     }
+    await mongoose.connect(uri);  // No need for useNewUrlParser and useUnifiedTopology
+    console.log('✅ Connected to MongoDB!');
+  } catch (err) {
+    console.error('❌ Error connecting to MongoDB:', err);
+  }
 };
 
 module.exports = dbconnect;
