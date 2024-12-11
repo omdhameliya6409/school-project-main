@@ -2,7 +2,7 @@ const fs = require('fs');
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
+// const rateLimit = require("express-rate-limit");
 require('dotenv').config();  // Load environment variables from the .env file
 
 const path = require('path');
@@ -43,12 +43,12 @@ app.use(
 // Use Helmet for security headers
 app.use(helmet());
 
-// Rate limiting middleware (limit to 100 requests per 15 minutes per IP)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-});
-app.use(limiter);
+// // Rate limiting middleware (limit to 100 requests per 15 minutes per IP)
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // Limit each IP to 100 requests per window
+// });
+// app.use(limiter);
 
 // Ensure 'uploads' folder exists
 const uploadDir = path.join(__dirname, 'uploads');
