@@ -54,6 +54,8 @@ exports.login = async (req, res) => {
   try {
     // Find the user by email
     const user = await User.findOne({ email });
+    let Data = await User.find()
+    console.log("Data",Data)
 
     if (!user) {
       return res.status(400).json({ message: 'Invalid email or password' });
