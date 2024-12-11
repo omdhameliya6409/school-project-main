@@ -3,6 +3,5 @@ package-lock.json
 
 seed.js
 updatePassword.js
-.env
 utils/
 uploads/
