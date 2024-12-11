@@ -43,13 +43,11 @@
 //     res.status(500).json({ message: 'Server error' });
 //   }
 // };
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User'); // Adjust path if needed
 
-// Secret key for JWT token generation (should be in .env in a real-world app)
-const JWT_SECRET = 'your_jwt_secret_key'; // Use environment variable for secret key
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
-// Login Controller with plain-text password
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -66,26 +64,25 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Create JWT token with user id and access flags (for principal, teacher, and student)
+    // Create JWT token with user id and access flags
     const token = jwt.sign(
       {
         userId: user._id,
-        principalAccess: user.principalAccess, // Assuming this is a boolean field in your User model
-        teacherAccess: user.teacherAccess,     // Same as above
-        studentAccess: user.studentAccess,     // Same as above
+        principalAccess: user.principalAccess,
+        teacherAccess: user.teacherAccess,
+        studentAccess: user.studentAccess,
       },
-      JWT_SECRET,  // Secret key to sign the JWT
+      JWT_SECRET,
       { expiresIn: '1h' }  // Token expires in 1 hour
     );
 
     // Return success response with the JWT token
     res.status(200).json({
       message: 'Login successful',
-      token,  // Send the token to the client
+      token,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
-
