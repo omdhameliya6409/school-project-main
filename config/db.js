@@ -2,16 +2,15 @@ const mongoose = require('mongoose');
 
 const dbconnect = async () => {
   try {
-    await mongoose.connect(
-      process.env.CONNECTION_STRING, // URI કનેક્શન સ્ટ્રિંગ
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      }
-    );
-    console.log('✅ Connected to MongoDB successfully');
+    const connection = await mongoose.connect(process.env['MONGO-URL'], {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      dbName: "school-project-main", // Add the database name explicitly
+    });
+    console.log(`✅ Connected to MongoDB: ${connection.connection.host}`);
   } catch (error) {
-    console.error('❌ Error connecting to the database:', error.message);
+    console.error(`❌ Error connecting to the database: ${error.message}`);
+    process.exit(1); // Stop the process if the database connection fails
   }
 };
 

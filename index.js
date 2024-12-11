@@ -2,9 +2,7 @@ const fs = require('fs');
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-// const rateLimit = require("express-rate-limit");
-require('dotenv').config();  // Load environment variables from the .env file
-
+require('dotenv').config(); // Load environment variables from the .env file
 const path = require('path');
 
 const dbconnect = require("./config/db"); // Ensure correct path
@@ -20,9 +18,8 @@ const app = express();
 // Allowed Origins
 const allowedOrigins = [
   "https://school-project-main.onrender.com", // Render frontend URL
-  "http://localhost:3001", // Local development (frontend running on localhost:3000)
-  "http://192.168.31.130:8000", // Allow access from local IP address (your server machine)
-  // Add any other allowed origins here
+  "http://localhost:3001", // Local development (frontend running on localhost:3001)
+  "http://192.168.31.130:8000", // Local IP for server machine
 ];
 
 app.use(
@@ -36,19 +33,12 @@ app.use(
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // If you're using cookies or authorization headers
+    credentials: true, // Allow cookies and authorization headers
   })
 );
 
 // Use Helmet for security headers
 app.use(helmet());
-
-// // Rate limiting middleware (limit to 100 requests per 15 minutes per IP)
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // Limit each IP to 100 requests per window
-// });
-// app.use(limiter);
 
 // Ensure 'uploads' folder exists
 const uploadDir = path.join(__dirname, 'uploads');
@@ -59,18 +49,17 @@ if (!fs.existsSync(uploadDir)) {
 app.use(express.json()); // Middleware to parse JSON requests
 
 // Connect to Database
-dbconnect(); // Make sure to call the function to establish the connection
+dbconnect(); // Call the function to establish the database connection
 
 // Serve static files (uploads)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadDir));
 
 // Routes
 app.use("/auth", authRoutes); // Authentication Routes
 app.use("/dashboard", dashboardRoutes);
 app.use("/students", studentRoutes);
-app.use('/Admission', admissionRoutes);
+app.use('/admission', admissionRoutes);
 app.use(principalRoutes);
-app.set('trust proxy', 2); // Trust the second proxy in the chain
 
 // Test Route
 app.get('/hello', (req, res) => {
@@ -85,6 +74,6 @@ app.use((err, req, res, next) => {
 
 // Start Server
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, '0.0.0.0', () => {  // Binding to 0.0.0.0 allows external devices to connect
-  console.log(`🚀 Server is running at http://192.168.31.130:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => { // Bind to 0.0.0.0 to allow external devices to connect
+  console.log(`🚀 Server is running at http://0.0.0.0:${PORT}`);
 });
