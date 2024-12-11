@@ -1,7 +1,8 @@
 const fs = require('fs');
 const express = require("express");
 const cors = require("cors");
-
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 require('dotenv').config();  // Load environment variables from the .env file
 
 const path = require('path');
@@ -44,8 +45,11 @@ app.use(
 app.use(helmet());
 
 // Rate limiting middleware (limit to 100 requests per 15 minutes per IP)
-
-
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+});
+app.use(limiter);
 
 // Ensure 'uploads' folder exists
 const uploadDir = path.join(__dirname, 'uploads');
@@ -67,7 +71,7 @@ app.use("/dashboard", dashboardRoutes);
 app.use("/students", studentRoutes);
 app.use('/Admission', admissionRoutes);
 app.use(principalRoutes);
-
+app.set('trust proxy', 1); // પ્રથમ પ્રોક્સી પર વિશ્વાસ રાખો
 
 // Test Route
 app.get('/hello', (req, res) => {
