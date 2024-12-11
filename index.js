@@ -1,7 +1,10 @@
 const fs = require('fs');
 const express = require("express");
 const cors = require("cors");
-require('dotenv').config();
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+require('dotenv').config();  // Load environment variables from the .env file
+
 const path = require('path');
 
 const dbconnect = require("./config/db"); // Ensure correct path
@@ -38,6 +41,16 @@ app.use(
   })
 );
 
+// Use Helmet for security headers
+app.use(helmet());
+
+// Rate limiting middleware (limit to 100 requests per 15 minutes per IP)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+});
+app.use(limiter);
+
 // Ensure 'uploads' folder exists
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -62,6 +75,12 @@ app.use(principalRoutes);
 // Test Route
 app.get('/hello', (req, res) => {
   res.send('Hello, World!');
+});
+
+// Global Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something went wrong!');
 });
 
 // Start Server
