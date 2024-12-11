@@ -69,8 +69,8 @@ app.use('/Admission', admissionRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 8000;
-const HOST = process.env.HOST || "192.168.31.130"; // Use HOST from environment variables or fallback
+ // Use HOST from environment variables or fallback
 
-app.listen(PORT,HOST, () => {
-  console.log(`🚀 Server is running at http://${HOST}:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running at http://localhost:${PORT}`);
 });
