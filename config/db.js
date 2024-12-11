@@ -12,10 +12,7 @@ const dbconnect = async () => {
         console.log("Connecting to MongoDB with URI:", process.env.CONNECTION_STRING);
 
         // Try connecting to MongoDB
-        await mongoose.connect(process.env.CONNECTION_STRING, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(process.env.CONNECTION_STRING);
         console.log("Database connected successfully");
     } catch (error) {
         console.error("Error connecting to the database:", error.message);
@@ -24,4 +21,3 @@ const dbconnect = async () => {
 };
 
 module.exports = dbconnect;
-
