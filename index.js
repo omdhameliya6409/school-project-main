@@ -19,25 +19,23 @@ const app = express();
 
 // Allowed Origins
 const allowedOrigins = [
-  "https://ucpthiz.localto.net",
-  "http://localhost:4002",
-  "http://localhost:3001",
-  "http://localhost:3000",
+  "https://school-project-main.onrender.com", // Render frontend URL
+  "http://localhost:3001", // Local development (frontend running on localhost:3000)
+  // Add any other allowed origins here
 ];
 
-// Middleware for CORS
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true); // Allow if origin is in the list or if it's a server-to-server request
+        callback(null, true); // Allow if the origin is in the list
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-    credentials: true, // Enable credentials for cookies or authorization headers
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // If you're using cookies or authorization headers
   })
 );
 
@@ -71,7 +69,7 @@ app.use("/dashboard", dashboardRoutes);
 app.use("/students", studentRoutes);
 app.use('/Admission', admissionRoutes);
 app.use(principalRoutes);
-app.set('trust proxy', 1); // પ્રથમ પ્રોક્સી પર વિશ્વાસ રાખો
+app.set('trust proxy', 2); // પ્રથમ પ્રોક્સી પર વિશ્વાસ રાખો
 
 // Test Route
 app.get('/hello', (req, res) => {
