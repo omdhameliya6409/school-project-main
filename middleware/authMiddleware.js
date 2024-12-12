@@ -30,7 +30,9 @@
 // authMiddleware.js
 // authMiddleware.js
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET;  // Ensure this matches the key used for signing
+require('dotenv').config(); // Ensure environment variables are loaded
+
+const JWT_SECRET = process.env.JWT_SECRET;// Load secret from .env or use a fallback
 
 const authMiddleware = (requiredRoles) => {
   return (req, res, next) => {
@@ -39,7 +41,6 @@ const authMiddleware = (requiredRoles) => {
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }
- // Log the received token for debugging
 
     // Verify the token
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
@@ -49,7 +50,7 @@ const authMiddleware = (requiredRoles) => {
           return res.status(401).json({ message: 'Token has expired, please login again.' });
         }
 
-        console.error("JWT verification failed:", err);  // Log the error
+        console.error("JWT verification failed:", err); // Log the error
         return res.status(403).json({ message: 'Failed to authenticate token', error: err.message });
       }
 
@@ -65,18 +66,13 @@ const authMiddleware = (requiredRoles) => {
       const hasRequiredRole = requiredRoles.some(role => decoded[role] === true);
 
       if (hasRequiredRole) {
-        return next();  // Proceed to the next middleware or route handler
+        return next(); // Proceed to the next middleware or route handler
       } else {
         return res.status(403).json({ message: 'You do not have permission to access this resource' });
       }
     });
   };
 };
-
-
-
-
-
 
 module.exports = authMiddleware;
 

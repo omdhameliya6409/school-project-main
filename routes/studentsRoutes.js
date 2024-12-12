@@ -72,6 +72,20 @@ router.get(
   "/",
   authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
   async (req, res) => {
+    try {
+      const students = await Student.find(); // Fetch all students
+      res.status(200).json({ message: "All students List successfully", students });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching students", error });
+    }
+  }
+);
+
+// Route 2: Advanced filtering and sorting route
+router.get(
+  "/search",
+  authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
+  async (req, res) => {
     const { name, studentClass, section, sortField = "name", sortOrder = "asc" } = req.query;
 
     // Build the search query
@@ -97,13 +111,12 @@ router.get(
 
     try {
       const students = await Student.find(query).sort(sortOptions);
-      res.status(200).json({ message: "Students retrieved successfully", students });
+      res.status(200).json({ message: "Filtered students retrieved successfully", students });
     } catch (error) {
-      res.status(500).json({ message: "Error fetching students", error });
+      res.status(500).json({ message: "Error fetching filtered students", error });
     }
   }
 );
-
 // Edit student details (PUT) - Principal and Teacher can edit
 router.put(
   "/edit/:id",
