@@ -30,7 +30,7 @@
 // authMiddleware.js
 // authMiddleware.js
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'omdhameliya6409';  // Ensure this matches the key used for signing
+const JWT_SECRET = process.env.JWT_SECRET;  // Ensure this matches the key used for signing
 
 const authMiddleware = (requiredRoles) => {
   return (req, res, next) => {
