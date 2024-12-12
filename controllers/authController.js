@@ -76,9 +76,22 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' } // Token validity duration
     );
 
-    // Step 4: Return success response with the token
+    // Step 4: Determine the role and return appropriate success message
+    let roleMessage = '';
+
+    if (user.principalAccess) {
+      roleMessage = 'Principal login successful';
+    } else if (user.teacherAccess) {
+      roleMessage = 'Teacher login successful';
+    } else if (user.studentAccess) {
+      roleMessage = 'Student login successful';
+    } else {
+      roleMessage = 'Login successful'; // Default message if no role matches
+    }
+
+    // Step 5: Return success response with the token and role-specific message
     res.status(200).json({
-      message: 'Login successful',
+      message: roleMessage,
       token, // Token sent to client
     });
   } catch (err) {
