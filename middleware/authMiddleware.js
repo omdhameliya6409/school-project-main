@@ -28,13 +28,11 @@
 //   };
 // };
 // authMiddleware.js
-// authMiddleware.js
 const jwt = require('jsonwebtoken');
-require('dotenv').config(); // Ensure environment variables are loaded
+require('dotenv').config();
+const User = require('../models/User');
+const JWT_SECRET = process.env.JWT_SECRET || 'your_default_jwt_secret';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_default_jwt_secret'; // Load secret from .env or use a fallback
-
-// Middleware to check for required roles
 const authMiddleware = (requiredRoles) => {
   return (req, res, next) => {
     const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
@@ -45,7 +43,7 @@ const authMiddleware = (requiredRoles) => {
     }
 
     // Verify the token
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, JWT_SECRET, async (err, decoded) => {
       if (err) {
         // Handle specific error when the token has expired
         if (err.name === 'TokenExpiredError') {
@@ -53,7 +51,7 @@ const authMiddleware = (requiredRoles) => {
         }
 
         // Handle other JWT errors (e.g., invalid token, malformed token)
-        console.error("JWT verification failed:", err); // Log the error for debugging
+        console.error("JWT verification failed:", err);
         return res.status(403).json({ message: 'Failed to authenticate token', error: err.message });
       }
 
@@ -69,6 +67,13 @@ const authMiddleware = (requiredRoles) => {
       const hasRequiredRole = requiredRoles.some(role => decoded[role] === true);
 
       if (hasRequiredRole) {
+        // Optionally check if the token has been blacklisted
+        // (for example, by checking against the database)
+        const user = await User.findById(decoded.userId);
+        if (user && user.activeToken !== token) {
+          return res.status(401).json({ message: 'This token has been invalidated. Please log in again.' });
+        }
+
         return next(); // Proceed to the next middleware or route handler
       } else {
         return res.status(403).json({ message: 'You do not have permission to access this resource' });
@@ -78,6 +83,9 @@ const authMiddleware = (requiredRoles) => {
 };
 
 module.exports = authMiddleware;
+
+
+
 
 
 

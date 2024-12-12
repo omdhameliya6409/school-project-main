@@ -111,24 +111,31 @@ exports.login = async (req, res) => {
 };
 
 // Logout controller
+// logout controller
 exports.logout = async (req, res) => {
   try {
     // Step 1: Get the user based on the token
-    const user = await User.findById(req.user._id);  // Assuming req.user is set by the auth middleware
+    const user = await User.findById(req.user.userId);  // Assuming req.user is set by the auth middleware
 
     if (!user) {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    // Step 2: Invalidate the token by removing it from the user's activeToken field
-    user.activeToken = null;  // Remove the active token
+    // Step 2: Invalidate the token (by removing any session or active token field)
+    user.activeToken = null;  // Remove the active token or any session-related information
     await user.save();
 
-    // Step 3: Return a success message
+    // Step 3: Send a success message
     res.status(200).json({ message: 'Logout successful' });
+
+    // You also need to clear the token on the client-side
+    // This can be done by removing it from localStorage or cookies
+    // Example for cookies:
+    res.clearCookie('token', { httpOnly: true, secure: true });  // If you're using cookies to store JWT
 
   } catch (err) {
     console.error('Error during logout:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
