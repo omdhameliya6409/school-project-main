@@ -30,7 +30,7 @@
 // authMiddleware.js
 // authMiddleware.js
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'your_jwt_secret_key'; // Use your secret key here
+const JWT_SECRET = 'omdhameliya6409';  // Ensure this matches the key used for signing
 
 const authMiddleware = (requiredRoles) => {
   return (req, res, next) => {
@@ -39,34 +39,46 @@ const authMiddleware = (requiredRoles) => {
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }
+ // Log the received token for debugging
 
+    // Verify the token
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
-        return res.status(403).json({ message: 'Failed to authenticate token' });
+        // Handle token expiration
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({ message: 'Token has expired, please login again.' });
+        }
+
+        console.error("JWT verification failed:", err);  // Log the error
+        return res.status(403).json({ message: 'Failed to authenticate token', error: err.message });
       }
+
+      // Attach decoded user data to the request
+      req.user = decoded;
 
       // Ensure requiredRoles is an array
       if (!Array.isArray(requiredRoles)) {
         return res.status(500).json({ message: 'Invalid requiredRoles parameter' });
       }
 
-      // Attach the decoded user data to req.user
-      req.user = decoded;
-
-      // Check if the user has any of the required roles directly (not in a "roles" array)
+      // Check if the decoded token contains the required role
       const hasRequiredRole = requiredRoles.some(role => decoded[role] === true);
 
       if (hasRequiredRole) {
-        next();  // Continue to the next middleware or route handler
+        return next();  // Proceed to the next middleware or route handler
       } else {
-        res.status(403).json({ message: 'You do not have permission to access this resource' });
+        return res.status(403).json({ message: 'You do not have permission to access this resource' });
       }
     });
   };
 };
 
-module.exports = authMiddleware;
 
+
+
+
+
+module.exports = authMiddleware;
 
 
 
