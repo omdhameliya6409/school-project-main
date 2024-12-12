@@ -44,47 +44,45 @@
 //   }
 // };
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Adjust path if needed
+const User = require('../models/User'); // User model for database interaction
 
+// Define your secret key for signing JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find the user by email
+    // Step 1: Find user by email
     const user = await User.findOne({ email });
-    let Data = await User.find()
-    console.log("Data",Data)
-
     if (!user) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Compare the plain-text password with the stored plain-text password
+    // Step 2: Validate the provided password (plain text check for this example)
     if (user.password !== password) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Create JWT token with user id and access flags
+    // Step 3: Generate JWT token upon successful login
     const token = jwt.sign(
       {
-        userId: user._id,
-        principalAccess: user.principalAccess,
-        teacherAccess: user.teacherAccess,
-        studentAccess: user.studentAccess,
+        userId: user._id, // Unique user ID
+        principalAccess: user.principalAccess || false, // Roles and permissions
+        teacherAccess: user.teacherAccess || false,
+        studentAccess: user.studentAccess || false,
       },
-      JWT_SECRET,
-      { expiresIn: '1h' }  // Token expires in 1 hour
+      JWT_SECRET, // Secret key for signing the token
+      { expiresIn: '1h' } // Token validity duration
     );
 
-    // Return success response with the JWT token
+    // Step 4: Return success response with the token
     res.status(200).json({
       message: 'Login successful',
-      token,
+      token, // Token sent to client
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error during login:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
