@@ -32,37 +32,40 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config(); // Ensure environment variables are loaded
 
-const JWT_SECRET = process.env.JWT_SECRET;// Load secret from .env or use a fallback
+const JWT_SECRET = process.env.JWT_SECRET || 'your_default_jwt_secret'; // Load secret from .env or use a fallback
 
+// Middleware to check for required roles
 const authMiddleware = (requiredRoles) => {
   return (req, res, next) => {
     const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
+    // If no token is provided
     if (!token) {
-      return res.status(401).json({ message: 'Token has expired' });
+      return res.status(401).json({ message: 'Token is missing, please provide a valid token.' });
     }
 
     // Verify the token
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
-        // Handle token expiration
+        // Handle specific error when the token has expired
         if (err.name === 'TokenExpiredError') {
           return res.status(401).json({ message: 'Token has expired, please login again.' });
         }
 
-        console.error("JWT verification failed:", err); // Log the error
+        // Handle other JWT errors (e.g., invalid token, malformed token)
+        console.error("JWT verification failed:", err); // Log the error for debugging
         return res.status(403).json({ message: 'Failed to authenticate token', error: err.message });
       }
 
-      // Attach decoded user data to the request
+      // Attach decoded user data to the request object
       req.user = decoded;
 
       // Ensure requiredRoles is an array
       if (!Array.isArray(requiredRoles)) {
-        return res.status(500).json({ message: 'Invalid requiredRoles parameter' });
+        return res.status(500).json({ message: 'Invalid requiredRoles parameter, expected an array.' });
       }
 
-      // Check if the decoded token contains the required role
+      // Check if the decoded token contains any of the required roles
       const hasRequiredRole = requiredRoles.some(role => decoded[role] === true);
 
       if (hasRequiredRole) {
