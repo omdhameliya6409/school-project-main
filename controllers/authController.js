@@ -78,24 +78,31 @@ exports.login = async (req, res) => {
 
     // Step 4: Determine the role and return appropriate success message
     let roleMessage = '';
+    let accessKey = {};  // To send the relevant access key
 
     if (user.principalAccess) {
       roleMessage = 'Principal login successful';
+      accessKey = { "principalAccess": true };  // Only principal access key
     } else if (user.teacherAccess) {
       roleMessage = 'Teacher login successful';
+      accessKey = { "teacherAccess": true };  // Only teacher access key
     } else if (user.studentAccess) {
       roleMessage = 'Student login successful';
+      accessKey = { "studentAccess": true };  // Only student access key
     } else {
       roleMessage = 'Login successful'; // Default message if no role matches
+      accessKey = {}; // No role-specific access keys
     }
 
-    // Step 5: Return success response with the token and role-specific message
+    // Step 5: Return success response with the token, role-specific message, and relevant access key
     res.status(200).json({
       message: roleMessage,
-      token, // Token sent to client
+      token, // JWT token sent to client
+      access: accessKey, // Send only the relevant access key
     });
   } catch (err) {
     console.error('Error during login:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
