@@ -18,7 +18,7 @@ const app = express();
 // Allowed Origins
 const allowedOrigins = [
   "https://school-project-main.onrender.com", // Render frontend URL
-  "http://localhost:3001", // Local development (frontend running on localhost:3001)
+  "http://localhost:5173", // Local development (frontend running on localhost:3001)
   "http://192.168.31.130:8000", // Local IP for server machine
 ];
 
