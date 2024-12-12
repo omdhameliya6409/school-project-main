@@ -31,7 +31,7 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const User = require('../models/User');
-const JWT_SECRET = process.env.JWT_SECRET || 'your_default_jwt_secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'your_default_jwt_secret'
 
 const authMiddleware = (requiredRoles) => {
   return (req, res, next) => {
