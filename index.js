@@ -11,6 +11,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const principalRoutes = require('./routes/principalRoutes');
 const studentRoutes = require("./routes/studentsRoutes");
 const admissionRoutes = require('./routes/admissionRoutes');
+const feeRoutes = require('./routes/feeRoutes');
 
 // Create app instance
 const app = express();
@@ -60,6 +61,7 @@ app.use("/dashboard", dashboardRoutes);
 app.use("/students", studentRoutes);
 app.use('/admission', admissionRoutes);
 app.use(principalRoutes);
+app.use('/', feeRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
