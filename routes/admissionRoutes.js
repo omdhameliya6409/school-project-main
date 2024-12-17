@@ -120,7 +120,6 @@ router.post(
         rollNo,
         class: studentClass,
         section,
-        fatherName: "N/A", // Add any default or optional field here
         dateOfBirth: new Date(dateOfBirth),
         gender,
         mobileNumber,
@@ -146,5 +145,32 @@ router.post(
     }
   }
 );
+// PUT: Update admission details
+router.put("/edit/:id", async (req, res) => {
+  const admissionId = req.params.id; // Get the admission ID from the route
+  const updateData = req.body; // Get updated data from the request body
 
+  try {
+    // Find and update the admission record
+    const updatedAdmission = await Admission.findByIdAndUpdate(
+      admissionId,
+      { $set: updateData }, // Update only fields provided in req.body
+      { new: true, runValidators: true } // Return updated document and validate
+    );
+
+    if (!updatedAdmission) {
+      return res.status(404).json({ message: "Admission not found" });
+    }
+
+    res.status(200).json({
+      message: "Admission updated successfully",
+      admission: updatedAdmission,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating admission",
+      error: error.message,
+    });
+  }
+});
 module.exports = router;
