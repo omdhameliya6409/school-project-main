@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const admissionSchema = new mongoose.Schema({
   admissionNo: { type: String, required: true, unique: true },
-  rollNo: { type: String },
+  rollNo: { type: Number },
   class: { type: String, required: true },
   section: { type: String, required: true },
   firstName: { type: String, required: true },
@@ -13,9 +13,9 @@ const admissionSchema = new mongoose.Schema({
   religion: { type: String },
   caste: { type: String },
   mobileNumber: { type: String, required: true },
-  email: { type: String },
+  email: { type: String, unique: true, required: true },
+  password: { type: String, required: true }, // Store password directly
   admissionDate: { type: Date, required: true },
-  photo: { type: String },
   bloodGroup: { type: String },
   house: { type: String },
   height: { type: Number },

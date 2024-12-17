@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
-const Admission = require('../models/Admission'); // Admission model
+
 const authMiddleware = require('../middleware/authMiddleware'); // Middleware for authorization
 
-const Student = require('../models/Student'); // Make sure the path is correct
-
+const User = require('../models/User');
+const Admission = require('../models/Admission');
+const Student = require('../models/Student'); // Ensure the path is correct
 router.post(
   '/add', // Route endpoint for adding a new admission
-  authMiddleware(['principalAccess', 'teacherAccess']), // Only Principal and Teacher can access
   [
     check('admissionNo').notEmpty().withMessage('Admission No is required'),
     check('class').notEmpty().withMessage('Class is required'),
@@ -24,6 +24,8 @@ router.post(
     check('dateOfBirth').notEmpty().withMessage('Date of Birth is required').isDate().withMessage('Invalid Date of Birth'),
     check('mobileNumber').isMobilePhone().withMessage('Invalid Mobile Number'),
     check('admissionDate').notEmpty().withMessage('Admission Date is required').isDate().withMessage('Invalid Admission Date'),
+    check('email').isEmail().withMessage('Invalid email'),
+    check('password').notEmpty().withMessage('Password is required'), // Ensure password is provided
   ],
   async (req, res) => {
     // Validate the request
@@ -48,13 +50,13 @@ router.post(
         mobileNumber,
         email,
         admissionDate,
-        photo,
         bloodGroup,
         house,
         height,
         weight,
         measurementDate,
         medicalHistory,
+        password,
       } = req.body;
 
       // Check for Duplicate Admission No
@@ -62,6 +64,25 @@ router.post(
       if (existingAdmission) {
         return res.status(400).json({ message: 'Admission No already exists' });
       }
+
+      // Check if the email is already in use
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email is already registered' });
+      }
+
+      // Create a New User Document (for login purposes)
+      const newUser = new User({
+        email,
+        password, // Store the plain password here (not recommended for production)
+        username: `${firstName} ${lastName}`, // Add username or other info as needed
+        principalAccess: false,
+        teacherAccess: false,
+        studentAccess: true,
+      });
+
+      // Save the User Document
+      const savedUser = await newUser.save();
 
       // Create a New Admission Document
       const newAdmission = new Admission({
@@ -78,20 +99,21 @@ router.post(
         caste,
         mobileNumber,
         email,
+        password,
         admissionDate: new Date(admissionDate), // Ensure date is in correct format
-        photo,
         bloodGroup,
         house,
         height,
         weight,
         measurementDate: measurementDate ? new Date(measurementDate) : null, // Handle optional fields
         medicalHistory,
+        userId: savedUser._id,  // Link the admission to the User document
       });
 
       // Save the Admission
       const savedAdmission = await newAdmission.save();
 
-      // Create a New Student Document
+      // Create a New Student Document (linking to the User)
       const newStudent = new Student({
         admissionNo,
         name: `${firstName} ${lastName}`,
@@ -106,6 +128,7 @@ router.post(
         isMultiClass: false,
         deleted: false,
         assignedTeacher: null,
+        userId: savedUser._id, // Link the student to the User
       });
 
       // Save the Student Document
@@ -115,6 +138,7 @@ router.post(
         message: 'Admission and student added successfully',
         admission: savedAdmission,
         student: newStudent,
+        user: savedUser,
       });
     } catch (error) {
       console.error('Error adding admission details:', error);
@@ -122,8 +146,5 @@ router.post(
     }
   }
 );
-
-
-
 
 module.exports = router;
