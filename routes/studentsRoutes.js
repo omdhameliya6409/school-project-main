@@ -88,20 +88,17 @@ router.get(
   async (req, res) => {
     const { name, studentClass, section, sortField = "name", sortOrder = "asc" } = req.query;
 
-    // Check if class and section are provided
-    if (!studentClass || !section) {
-      return res.status(400).json({
-        message: "Class and section must be selected to filter students",
-      });
-    }
-
     // Build the search query
     const query = {};
     if (name) {
       query.name = { $regex: name, $options: "i" }; // Case-insensitive regex for name
     }
-    query.class = studentClass;
-    query.section = section;
+    if (studentClass) {
+      query.class = studentClass;
+    }
+    if (section) {
+      query.section = section;
+    }
 
     // If the user is a teacher, filter students by assignedTeacher
     if (req.userTeacherId) {
@@ -120,7 +117,6 @@ router.get(
     }
   }
 );
-
 // Edit student details (PUT) - Principal and Teacher can edit
 router.put(
   "/edit/:id",
