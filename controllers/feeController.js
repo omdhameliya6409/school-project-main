@@ -22,10 +22,10 @@ exports.getFeesByClassAndSection = [
   }
 ];
 exports.collectFee = [
-  authMiddleware(["principalAccess"]), // Only allow principal to collect fee
+  authMiddleware(["principalAccess" , "teacherAccess"]), // Only allow principal to collect fee
   async (req, res) => {
     const { studentId } = req.params;
-    const { paymentId, mode, amountPaid, discount, fine, feesGroup, feesCode } = req.body;
+    const {  mode, amountPaid, discount, fine, feesGroup, feesCode } = req.body;
 
     try {
       // Validate required fields
