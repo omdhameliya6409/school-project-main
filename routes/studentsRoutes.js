@@ -68,37 +68,40 @@ router.post(
 );
 
 // Get all students (GET) - Principal can see all, Teacher can see their assigned students
-router.get(
-  "/",
-  authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
-  async (req, res) => {
-    try {
-      const students = await Student.find(); // Fetch all students
-      res.status(200).json({ message: "All students List successfully", students });
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching students", error });
-    }
-  }
-);
+// router.get(
+//   "/",
+//   authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
+//   async (req, res) => {
+//     try {
+//       const students = await Student.find(); // Fetch all students
+//       res.status(200).json({ message: "All students List successfully", students });
+//     } catch (error) {
+//       res.status(500).json({ message: "Error fetching students", error });
+//     }
+//   }
+// );
 
 // Route 2: Advanced filtering and sorting route
 router.get(
-  "/search",
+  "/allstudent",
   authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
   async (req, res) => {
     const { name, studentClass, section, sortField = "name", sortOrder = "asc" } = req.query;
+
+    // Check if class and section are provided
+    if (!studentClass || !section) {
+      return res.status(400).json({
+        message: "Class and section must be selected to filter students",
+      });
+    }
 
     // Build the search query
     const query = {};
     if (name) {
       query.name = { $regex: name, $options: "i" }; // Case-insensitive regex for name
     }
-    if (studentClass) {
-      query.class = studentClass;
-    }
-    if (section) {
-      query.section = section;
-    }
+    query.class = studentClass;
+    query.section = section;
 
     // If the user is a teacher, filter students by assignedTeacher
     if (req.userTeacherId) {
@@ -117,6 +120,7 @@ router.get(
     }
   }
 );
+
 // Edit student details (PUT) - Principal and Teacher can edit
 router.put(
   "/edit/:id",
