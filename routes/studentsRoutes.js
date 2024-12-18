@@ -389,8 +389,8 @@ router.get(
 
 
 // You can add other routes or endpoints as necessary for your application
-
-router.delete('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
+// /bulk-delete/filter
+router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
   const { studentClass, section } = req.query;
 
   // Create an empty query object
@@ -408,22 +408,36 @@ router.delete('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacher
 
   try {
     // Fetch students based on filter criteria
-    const students = await Student.find(query);
+    const students = await Student.find(query).select(
+      'admissionNo name class section dateOfBirth gender mobileNumber'
+    ); // Fetch the required fields
 
     if (students.length === 0) {
       return res.status(404).json({ message: 'No students found for the given criteria' });
     }
 
-    // Perform bulk deletion
-    await Student.deleteMany(query);
+    // Filter students based on class and section
+    const filteredStudents = students.filter(student => 
+      (studentClass ? student.class === studentClass : true) &&
+      (section ? student.section === section : true)
+    );
+
+    // Checking if there are students that match the filter criteria
+    if (filteredStudents.length === 0) {
+      return res.status(404).json({ message: 'No students found for the given class and section' });
+    }
 
     res.status(200).json({
-      message: `${students.length} students deleted successfully`,
+      message: 'Students retrieved successfully',
+      data: filteredStudents,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting students', error });
+    res.status(500).json({ message: 'Error retrieving students', error });
   }
 });
+
+
+
 
 
 
