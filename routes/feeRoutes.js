@@ -7,5 +7,7 @@ router.post('/studentfee/collectfee/:studentId', feeController.collectFee);  // 
 router.get('/studentfee/:studentId', feeController.getFeeDetails);  // Accessible by principal and teacher
 router.get('/searchpaymentByPaymentId', feeController.searchPaymentsByPaymentId);
 
+router.put('/studentfee/edit/:studentId', feeController.editFee);
+
 
 module.exports = router;

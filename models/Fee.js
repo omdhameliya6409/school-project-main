@@ -1,8 +1,11 @@
 const mongoose = require("mongoose");
-  const FeeSchema = new mongoose.Schema({
+
+const FeeSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
-  feesGroup: { type: String, required: true }, 
-  feesCode: { type: String, required: true },   
+  feesGroup: { type: String, required: true },
+  feesCode: { type: String, required: true },
+  class: { type: String, required: true },  // Expect 'class' here
+  section: { type: String, enum: ['A', 'B', 'C', 'D'], required: true },  // Ensure 'section' is defined here
   dueDate: { type: Date, required: true },
   status: { type: String, enum: ['Paid', 'Unpaid', 'Partial'], default: 'Unpaid' },
   amount: { type: Number, required: true },
