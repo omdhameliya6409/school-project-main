@@ -252,138 +252,138 @@ router.get(
   authMiddleware(['principalAccess', 'teacherAccess']), // Only Principal and Teacher can access
   getAdmissionCSV // Controller function to generate and send CSV
 );
-// Block a student by studentId
-router.put(
-  '/block/:studentId', // Block a student by their studentId
-  authMiddleware(['principalAccess', 'teacherAccess']), // Ensure proper authorization
-  async (req, res) => {
-    const { studentId } = req.params; // Get studentId from the request parameters
-    const { blockReason } = req.body; // Get the block reason from the request body
+// // Block a student by studentId
+// router.put(
+//   '/block/:studentId', // Block a student by their studentId
+//   authMiddleware(['principalAccess', 'teacherAccess']), // Ensure proper authorization
+//   async (req, res) => {
+//     const { studentId } = req.params; // Get studentId from the request parameters
+//     const { blockReason } = req.body; // Get the block reason from the request body
 
-    if (!blockReason) {
-      return res.status(400).json({ message: 'Block reason is required' });
-    }
+//     if (!blockReason) {
+//       return res.status(400).json({ message: 'Block reason is required' });
+//     }
 
-    try {
-      // Find the student by their ID
-      const student = await Student.findById(studentId);
-      if (!student) {
-        return res.status(404).json({ message: 'Student not found' });
-      }
+//     try {
+//       // Find the student by their ID
+//       const student = await Student.findById(studentId);
+//       if (!student) {
+//         return res.status(404).json({ message: 'Student not found' });
+//       }
 
-      // Update the student's isBlocked status to true
-      student.isBlocked = true;
-      await student.save(); // Save the updated student document
+//       // Update the student's isBlocked status to true
+//       student.isBlocked = true;
+//       await student.save(); // Save the updated student document
 
-      // Create a new blocked student record with the reason and student info
-      const blockedStudent = new BlockedStudent({
-        studentId: student._id, // Reference to student ID
-        blockReason: blockReason, // Block reason
-      });
+//       // Create a new blocked student record with the reason and student info
+//       const blockedStudent = new BlockedStudent({
+//         studentId: student._id, // Reference to student ID
+//         blockReason: blockReason, // Block reason
+//       });
 
-      // Save the blocked student record
-      await blockedStudent.save();
+//       // Save the blocked student record
+//       await blockedStudent.save();
 
-      return res.status(200).json({
-        message: 'Student blocked successfully',
-        studentId: student._id,
-        blockReason: blockReason,
-        isBlocked: student.isBlocked,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Error blocking student', error });
-    }
-  }
-);
+//       return res.status(200).json({
+//         message: 'Student blocked successfully',
+//         studentId: student._id,
+//         blockReason: blockReason,
+//         isBlocked: student.isBlocked,
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       return res.status(500).json({ message: 'Error blocking student', error });
+//     }
+//   }
+// );
 
-// Unblock a student by studentId
-router.put(
-  '/unblock/:studentId', // Unblock a student by their studentId
-  authMiddleware(['principalAccess', 'teacherAccess']), // Ensure proper authorization
-  async (req, res) => {
-    const { studentId } = req.params;
+// // Unblock a student by studentId
+// router.put(
+//   '/unblock/:studentId', // Unblock a student by their studentId
+//   authMiddleware(['principalAccess', 'teacherAccess']), // Ensure proper authorization
+//   async (req, res) => {
+//     const { studentId } = req.params;
 
-    try {
-      // Find the student by their ID
-      const student = await Student.findById(studentId);
-      if (!student) {
-        return res.status(404).json({ message: 'Student not found' });
-      }
+//     try {
+//       // Find the student by their ID
+//       const student = await Student.findById(studentId);
+//       if (!student) {
+//         return res.status(404).json({ message: 'Student not found' });
+//       }
 
-      // Update the student's isBlocked status to false
-      student.isBlocked = false;
-      await student.save(); // Save the updated student document
+//       // Update the student's isBlocked status to false
+//       student.isBlocked = false;
+//       await student.save(); // Save the updated student document
 
-      // Optionally remove the student from the BlockedStudent collection
-      await BlockedStudent.deleteOne({ studentId: student._id });
+//       // Optionally remove the student from the BlockedStudent collection
+//       await BlockedStudent.deleteOne({ studentId: student._id });
 
-      return res.status(200).json({
-        message: 'Student unblocked successfully',
-        studentId: student._id,
-        isBlocked: student.isBlocked,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Error unblocking student', error });
-    }
-  }
-);
-
-
+//       return res.status(200).json({
+//         message: 'Student unblocked successfully',
+//         studentId: student._id,
+//         isBlocked: student.isBlocked,
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       return res.status(500).json({ message: 'Error unblocking student', error });
+//     }
+//   }
+// );
 
 
-router.get(
-  '/blocked',
-  authMiddleware(['principalAccess', 'teacherAccess']), // Ensure proper authorization
-  async (req, res) => {
-    try {
-      // Fetch all blocked students and populate their details
-      const blockReasons = await BlockedStudent.find()
-        .populate('studentId', 'admissionNo name rollNo class section mobileNumber isBlocked') // Populate student details
-        .exec();
 
-      // If no blocked students are found, return a message
-      if (blockReasons.length === 0) {
-        return res.status(404).json({ message: 'No students are currently blocked.' });
-      }
 
-      // Format the response to include blockReason and other student details
-      const formattedBlockReasons = blockReasons.map((blocked) => {
-        // Check if studentId is populated
-        if (blocked.studentId) {
-          return {
-            _id: blocked.studentId._id,
-            admissionNo: blocked.studentId.admissionNo,
-            name: blocked.studentId.name, // Full name (if you want to show it separately)
-            rollNo: blocked.studentId.rollNo,
-            class: blocked.studentId.class,
-            section: blocked.studentId.section,
-            mobileNumber: blocked.studentId.mobileNumber,
-            isBlocked: blocked.studentId.isBlocked,
-            blockReason: blocked.blockReason, // Add block reason
-            blockedAt: blocked.blockedAt, // Blocked date
-          };
-        } else {
-          // If studentId is not populated, return a fallback response
-          return {
-            message: 'Student information is missing for this blocked entry.',
-            blockReason: blocked.blockReason,
-            blockedAt: blocked.blockedAt,
-          };
-        }
-      });
+// router.get(
+//   '/blocked',
+//   authMiddleware(['principalAccess', 'teacherAccess']), // Ensure proper authorization
+//   async (req, res) => {
+//     try {
+//       // Fetch all blocked students and populate their details
+//       const blockReasons = await BlockedStudent.find()
+//         .populate('studentId', 'admissionNo name rollNo class section mobileNumber isBlocked') // Populate student details
+//         .exec();
 
-      return res.status(200).json({
-        message: 'Blocked students fetched successfully',
-        students: formattedBlockReasons,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Error fetching blocked students', error });
-    }
-  }
-);
+//       // If no blocked students are found, return a message
+//       if (blockReasons.length === 0) {
+//         return res.status(404).json({ message: 'No students are currently blocked.' });
+//       }
+
+//       // Format the response to include blockReason and other student details
+//       const formattedBlockReasons = blockReasons.map((blocked) => {
+//         // Check if studentId is populated
+//         if (blocked.studentId) {
+//           return {
+//             _id: blocked.studentId._id,
+//             admissionNo: blocked.studentId.admissionNo,
+//             name: blocked.studentId.name, // Full name (if you want to show it separately)
+//             rollNo: blocked.studentId.rollNo,
+//             class: blocked.studentId.class,
+//             section: blocked.studentId.section,
+//             mobileNumber: blocked.studentId.mobileNumber,
+//             isBlocked: blocked.studentId.isBlocked,
+//             blockReason: blocked.blockReason, // Add block reason
+//             blockedAt: blocked.blockedAt, // Blocked date
+//           };
+//         } else {
+//           // If studentId is not populated, return a fallback response
+//           return {
+//             message: 'Student information is missing for this blocked entry.',
+//             blockReason: blocked.blockReason,
+//             blockedAt: blocked.blockedAt,
+//           };
+//         }
+//       });
+
+//       return res.status(200).json({
+//         message: 'Blocked students fetched successfully',
+//         students: formattedBlockReasons,
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       return res.status(500).json({ message: 'Error fetching blocked students', error });
+//     }
+//   }
+// );
 
 
 
@@ -510,13 +510,18 @@ router.get(
     const { category } = req.query;
 
     // Check if category is valid
-    if (!['General', 'OBC', 'SC', 'ST'].includes(category)) {
+    const validCategories = ['General', 'OBC', 'SC', 'ST'];
+
+    if (category && !validCategories.includes(category)) {
       return res.status(400).json({ message: 'Invalid category' });
     }
 
     try {
-      // Fetch students matching the category
-      const students = await Student.find({ category });
+      // If category is not provided, we can skip category filtering
+      const filter = category ? { category } : {};
+
+      // Fetch students matching the category (or all students if category is not provided)
+      const students = await Student.find(filter);
 
       if (students.length === 0) {
         return res.status(404).json({ message: 'No students found matching the category filter' });
@@ -532,6 +537,7 @@ router.get(
     }
   }
 );
+
 
 router.get(
   '/students/filter/house', // Route to filter students by house name or description

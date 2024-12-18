@@ -8,6 +8,7 @@ const studentSchema = new mongoose.Schema({
   // fatherName: { type: String, required: true },
   dateOfBirth: { type: Date, required: true },
   gender: { type: String, required: true },
+  category: { type: String, enum: ['General', 'OBC', 'SC', 'ST'], required: true },
   mobileNumber: { type: String, required: true },
   isBlocked: { type: Boolean, default: false }, // Blocked status
   isMultiClass: Boolean,
