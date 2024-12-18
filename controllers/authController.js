@@ -57,12 +57,12 @@ exports.login = async (req, res) => {
     // Step 1: Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: 'Invalid email' });
     }
 
     // Step 2: Validate the provided password (plain-text comparison)
     if (user.password !== password) {  // Direct comparison (not recommended for production)
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: 'Invalid password' });
     }
 
     // Step 3: Generate JWT token without expiration (it will not expire automatically)
