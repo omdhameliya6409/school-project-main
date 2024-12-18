@@ -177,14 +177,18 @@ router.get(
   async (req, res) => {
     const { studentClass, section, sortField = 'name', sortOrder = 'asc' } = req.query;
 
+    // Validate if `studentClass` and `section` are provided
+    if (!studentClass || !section) {
+      return res.status(400).json({
+        message: '`studentClass` and `section` are required query parameters.',
+      });
+    }
+
     // Build the query object
-    const query = {};
-    if (studentClass) {
-      query.class = studentClass; // Filter by class
-    }
-    if (section) {
-      query.section = section; // Filter by section
-    }
+    const query = {
+      class: studentClass,
+      section: section,
+    };
 
     // Sort options
     const sortOptions = {};
@@ -207,6 +211,41 @@ router.get(
     }
   }
 );
+router.put(
+  '/multiclass/edit/:id',
+  authMiddleware(['principalAccess', 'teacherAccess']), // Authorization middleware
+  async (req, res) => {
+    const studentId = req.params.id; // Student ID from URL
+    const updateData = req.body; // Updated details from request body
+
+    try {
+      // Check if student exists
+      const student = await Student.findById(studentId);
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+      }
+
+      // Update the student record
+      const updatedStudent = await Student.findByIdAndUpdate(
+        studentId,
+        { $set: updateData }, // Update only provided fields
+        { new: true, runValidators: true } // Return updated document and validate data
+      );
+
+      res.status(200).json({
+        message: 'Student details updated successfully',
+        student: updatedStudent,
+      });
+    } catch (error) {
+      console.error('Error updating student details:', error);
+      res.status(500).json({
+        message: 'Error updating student details',
+        error: error.message,
+      });
+    }
+  }
+);
+
 // Route to download all admission details as a CSV
 router.get(
   '/download',
