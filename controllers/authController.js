@@ -45,8 +45,8 @@
 // };
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+require('dotenv').config();
 
-// Define your secret key for signing JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 // Login controller
@@ -137,4 +137,47 @@ exports.logout = async (req, res) => {
   }
 };
 
+exports.isLoggedIn = async (req, res) => {
+  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+  // If no token is provided
+  if (!token) {
+    return res.status(400).json({ message: 'No token provided, user is not logged in.' });
+  }
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Fetch the user from the database using decoded data
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(400).json({ message: 'User not found, invalid token.' });
+    }
+
+    // Check if the token is valid (not blacklisted or replaced)
+    if (user.activeToken !== token) {
+      return res.status(400).json({ message: 'Token is invalidated, user is logged out.' });
+    }
+
+    // User is logged in, return their data
+    return res.status(200).json({
+      message: 'User is logged in.',
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        roles: user.roles,
+      },
+    });
+  } catch (err) {
+    // Handle token verification errors
+    if (err.name === 'TokenExpiredError') {
+      return res.status(400).json({ message: 'Token has expired, user is logged out.' });
+    }
+
+    return res.status(401).json({ message: 'Invalid token, user is not logged in.' });
+  }
+};
 

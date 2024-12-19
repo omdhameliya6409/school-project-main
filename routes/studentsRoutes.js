@@ -385,9 +385,6 @@ router.get(
 //   }
 // );
 
-
-
-
 // You can add other routes or endpoints as necessary for your application
 // /bulk-delete/filter
 router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
@@ -435,11 +432,6 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
     res.status(500).json({ message: 'Error retrieving students', error });
   }
 });
-
-
-
-
-
 
 router.delete(
   '/bulk-delete', // Route to delete multiple students by class and section

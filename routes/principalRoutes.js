@@ -42,10 +42,6 @@ router.get('/dashboard/student-list', authMiddleware(['principalAccess', 'teache
   }
 });
 
-
-
-
-
 // Route to get Student Admission Details
 router.get(
   '/admission', // Simplified route without '/dashboard' and '/principal'
@@ -74,11 +70,6 @@ router.get(
     }
   }
 );
-
-
-
-
-
 // Route to get Online Admission Data
 router.get('/dashboard/principal/online-admissions', authMiddleware(['principalAccess']), async (req, res) => {
   try {
