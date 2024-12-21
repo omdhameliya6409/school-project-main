@@ -20,12 +20,12 @@ exports.getFeesByClassAndSection = [
       const students = await Student.find(filters);
 
       if (students.length === 0) {
-        return res.status(404).json({ message: 'No students found for the selected class and section' });
+        return res.status(404).json({ status: 404 , message: 'No students found for the selected class and section' });
       }
 
       // Step 2: Find fee data for these students
       const fees = await Fee.find({ studentId: { $in: students.map(student => student._id) } })
-        .populate('studentId', 'name class section admissionNo dateOfBirth gender category mobileNumber'); // Populating additional student details
+        .populate('studentId', 'name class section admissionNo dateOfBirth gender category mobileNumber'); 
 
       // Step 3: Create the response for each student
       const studentFees = students.map(student => {
@@ -34,7 +34,7 @@ exports.getFeesByClassAndSection = [
 
         // If fee exists, calculate status (Paid or Pending)
         if (fee) {
-          const status = fee.balance <= 0 ? 'Paid' : 'Pending';  // If balance is 0 or less, status is Paid
+          const status = fee.balance <= 0 ? 'Paid' : 'Pending'; 
           return {
             studentId: student._id,
             name: student.name,
@@ -83,12 +83,13 @@ exports.getFeesByClassAndSection = [
       });
 
       res.status(200).json({
+        status: 200,
         message: 'Fees data retrieved successfully',
         data: studentFees
       });
     } catch (err) {
       console.error('Error fetching fees:', err);
-      res.status(500).json({ message: 'Server error', error: err.message });
+      res.status(500).json({ status: 500, message: 'Server error', error: err.message });
     }
   }
 ];
@@ -102,13 +103,13 @@ exports.collectFee = [
     try {
       // Validate required fields
       if (!feesGroup || !feesCode || !section || !studentClass) {
-        return res.status(400).json({ message: 'feesGroup, feesCode, section, and class are required' });
+        return res.status(400).json({ status: 400, message: 'feesGroup, feesCode, section, and class are required' });
       }
 
       // Allowed payment modes
       const allowedModes = ['Cash', 'Cheque', 'DD', 'Bank Transfer', 'UPI', 'Card'];
       if (!allowedModes.includes(mode)) {
-        return res.status(400).json({ message: `Invalid payment mode. Allowed modes are: ${allowedModes.join(', ')}` });
+        return res.status(400).json({ status: 400, message: `Invalid payment mode. Allowed modes are: ${allowedModes.join(', ')}` });
       }
 
       // Fetch or create fee record
@@ -143,7 +144,7 @@ exports.collectFee = [
 
       // Ensure the paid amount does not exceed the total amount
       if (fee.paid + validAmountPaid > totalAmount) {
-        return res.status(400).json({ message: 'Paid amount cannot exceed the total fee amount' });
+        return res.status(400).json({ status: 200, message: 'Paid amount cannot exceed the total fee amount' });
       }
 
       // Update the balance and paid amount
@@ -168,10 +169,10 @@ exports.collectFee = [
       // Save the updated fee record
       await fee.save();
 
-      res.status(200).json({ message: 'Fee collected successfully', data: fee });
+      res.status(200).json({ status: 200, message: 'Fee collected successfully', data: fee });
     } catch (err) {
       console.error('Error collecting fee:', err);
-      res.status(500).json({ message: 'Server error', error: err.message });
+      res.status(500).json({ status: 500, message: 'Server error', error: err.message });
     }
   }
 ];
@@ -188,13 +189,13 @@ exports.getFeeDetails = [
     try {
       const fee = await Fee.findOne({ studentId }).populate('studentId', 'name class section');
       if (!fee) {
-        return res.status(404).json({ message: 'No fee record found for the student' });
+        return res.status(404).json({ status: 404, message: 'No fee record found for the student' });
       }
 
-      res.status(200).json({ message: 'Fee details retrieved successfully', data: fee });
+      res.status(200).json({ status: 200, message: 'Fee details retrieved successfully', data: fee });
     } catch (err) {
       console.error('Error fetching fee details:', err);
-      res.status(500).json({ message: 'Server error', error: err.message });
+      res.status(500).json({ status: 500, message: 'Server error', error: err.message });
     }
   }
 ];
@@ -206,20 +207,20 @@ exports.searchPaymentsByPaymentId = [
       const { paymentId } = req.query; // Payment ID passed in query parameter
 
       if (!paymentId) {
-        return res.status(400).json({ message: 'Payment ID is required to search payments' });
+        return res.status(400).json({ status:400,message: 'Payment ID is required to search payments' });
       }
 
       // Find the specific payment by paymentId
       const fee = await Fee.findOne({ paymentId }).populate('studentId', 'name class section');
 
       if (!fee) {
-        return res.status(404).json({ message: 'No payment found with the given Payment ID' });
+        return res.status(404).json({ status:404, message: 'No payment found with the given Payment ID' });
       }
 
-      res.status(200).json({ message: 'Payment found successfully', data: fee });
+      res.status(200).json({ status:200,message: 'Payment found successfully', data: fee });
     } catch (err) {
       console.error('Error searching payment by Payment ID:', err);
-      res.status(500).json({ message: 'Server error', error: err.message });
+      res.status(500).json({ status:500, message: 'Server error', error: err.message });
     }
   }
 ];
@@ -243,7 +244,7 @@ exports.editFee = [
       if (!feesGroup || !feesCode || !section || !studentClass) {
         return res
           .status(400)
-          .json({ message: "feesGroup, feesCode, section, and class are required" });
+          .json({ status:400, message: "feesGroup, feesCode, section, and class are required" });
       }
 
       // Allowed payment modes
@@ -251,7 +252,7 @@ exports.editFee = [
       if (mode && !allowedModes.includes(mode)) {
         return res
           .status(400)
-          .json({
+          .json({status:400,
             message: `Invalid payment mode. Allowed modes are: ${allowedModes.join(", ")}`,
           });
       }
@@ -266,7 +267,7 @@ exports.editFee = [
       });
 
       if (!fee) {
-        return res.status(404).json({ message: "Fee record not found" });
+        return res.status(404).json({status:404, message: "Fee record not found" });
       }
 
       // Validate and ensure no negative values for discount, fine, and amount paid
@@ -281,7 +282,7 @@ exports.editFee = [
       if (fee.paid + validAmountPaid > totalAmount) {
         return res
           .status(400)
-          .json({ message: "Paid amount cannot exceed the total fee amount" });
+          .json({ status:400, message: "Paid amount cannot exceed the total fee amount" });
       }
 
       // Update the balance and paid amount
@@ -310,10 +311,10 @@ exports.editFee = [
       // Save the updated fee record
       await fee.save();
 
-      res.status(200).json({ message: "Fee record updated successfully", data: fee });
+      res.status(200).json({ status:200, message: "Fee record updated successfully", data: fee });
     } catch (err) {
       console.error("Error editing fee:", err);
-      res.status(500).json({ message: "Server error", error: err.message });
+      res.status(500).json({ status:500, message: "Server error", error: err.message });
     }
   },
 ];

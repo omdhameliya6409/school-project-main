@@ -25,7 +25,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ status:400, errors: errors.array() });
     }
 
     const {
@@ -55,11 +55,12 @@ router.post(
 
       await newStudent.save();
       res.status(201).json({
+        status:201,
         message: "Student added successfully",
         student: newStudent,
       });
     } catch (error) {
-      res.status(500).json({ message: "Error adding student", error });
+      res.status(500).json({ status:500,message: "Error adding student", error });
     }
   }
 );
@@ -108,9 +109,9 @@ router.get(
 
     try {
       const students = await Student.find(query).sort(sortOptions);
-      res.status(200).json({ message: "Filtered students retrieved successfully", students });
+      res.status(200).json({ status:200, message: "Filtered students retrieved successfully", students });
     } catch (error) {
-      res.status(500).json({ message: "Error fetching filtered students", error });
+      res.status(500).json({ status:500,message: "Error fetching filtered students", error });
     }
   }
 );
@@ -125,7 +126,7 @@ router.put(
     // Input validation (optional for updates)
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ status:400, errors: errors.array() });
     }
 
     try {
@@ -136,15 +137,16 @@ router.put(
       );
 
       if (!updatedStudent) {
-        return res.status(404).json({ message: "Student not found" });
+        return res.status(404).json({ status:404,message: "Student not found" });
       }
 
       res.status(200).json({
+        status:200,
         message: "Student updated successfully",
         student: updatedStudent,
       });
     } catch (error) {
-      res.status(500).json({ message: "Error editing student", error });
+      res.status(500).json({ status:500,message: "Error editing student", error });
     }
   }
 );
@@ -160,14 +162,15 @@ router.delete(
       const deletedStudent = await Student.findByIdAndDelete(studentId);
 
       if (!deletedStudent) {
-        return res.status(404).json({ message: "Student not found" });
+        return res.status(404).json({status:404, message: "Student not found" });
       }
 
       res.status(200).json({
+        status:200,
         message: "Student deleted successfully",
       });
     } catch (error) {
-      res.status(500).json({ message: "Error deleting student", error });
+      res.status(500).json({ status:500,message: "Error deleting student", error });
     }
   }
 );
@@ -180,6 +183,7 @@ router.get(
     // Validate if `studentClass` and `section` are provided
     if (!studentClass || !section) {
       return res.status(400).json({
+        status:400,
         message: '`studentClass` and `section` are required query parameters.',
       });
     }
@@ -198,16 +202,17 @@ router.get(
       const students = await Student.find(query).sort(sortOptions);
 
       if (students.length === 0) {
-        return res.status(404).json({ message: 'No students found matching your filters' });
+        return res.status(404).json({status:404, message: 'No students found matching your filters' });
       }
 
       res.status(200).json({
+        status:200,
         message: 'Students fetched successfully',
         students,
       });
     } catch (error) {
       console.error('Error fetching students:', error);
-      res.status(500).json({ message: 'Error fetching students', error });
+      res.status(500).json({ status:500,message: 'Error fetching students', error });
     }
   }
 );
@@ -222,7 +227,7 @@ router.put(
       // Check if student exists
       const student = await Student.findById(studentId);
       if (!student) {
-        return res.status(404).json({ message: 'Student not found' });
+        return res.status(404).json({ status:404,message: 'Student not found' });
       }
 
       // Update the student record
@@ -233,12 +238,14 @@ router.put(
       );
 
       res.status(200).json({
+        status:200,
         message: 'Student details updated successfully',
         student: updatedStudent,
       });
     } catch (error) {
       console.error('Error updating student details:', error);
       res.status(500).json({
+        status:500,
         message: 'Error updating student details',
         error: error.message,
       });
@@ -410,7 +417,7 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
     ); // Fetch the required fields
 
     if (students.length === 0) {
-      return res.status(404).json({ message: 'No students found for the given criteria' });
+      return res.status(404).json({ status:404,message: 'No students found for the given criteria' });
     }
 
     // Filter students based on class and section
@@ -421,7 +428,7 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
 
     // Checking if there are students that match the filter criteria
     if (filteredStudents.length === 0) {
-      return res.status(404).json({ message: 'No students found for the given class and section' });
+      return res.status(404).json({ status:404, message: 'No students found for the given class and section' });
     }
 
     res.status(200).json({
@@ -429,7 +436,7 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
       data: filteredStudents,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving students', error });
+    res.status(500).json({ status:500,message: 'Error retrieving students', error });
   }
 });
 
@@ -459,17 +466,19 @@ router.delete(
       // Check if any students were deleted
       if (deletedStudents.deletedCount === 0) {
         return res.status(404).json({
+          status:404,
           message: 'No students found matching your filters to delete',
         });
       }
 
       // Return success message with the count of deleted students
       return res.status(200).json({
+        status:200,
         message: `${deletedStudents.deletedCount} students deleted successfully`,
       });
     } catch (error) {
       console.error('Error deleting students:', error);
-      return res.status(500).json({ message: 'Error deleting students', error });
+      return res.status(500).json({ status:500, message: 'Error deleting students', error });
     }
   }
 );
@@ -483,7 +492,7 @@ router.delete(
       
       // Check if any students were deleted
       if (deletedStudents.deletedCount === 0) {
-        return res.status(404).json({ message: 'No students to delete' });
+        return res.status(404).json({status:404, message: 'No students to delete' });
       }
 
       return res.status(200).json({
@@ -491,7 +500,7 @@ router.delete(
       });
     } catch (error) {
       console.error('Error deleting all students:', error);
-      return res.status(500).json({ message: 'Error deleting students', error });
+      return res.status(500).json({ status:500,message: 'Error deleting students', error });
     }
   }
 );
@@ -505,7 +514,7 @@ router.get(
     const validCategories = ['General', 'OBC', 'SC', 'ST'];
 
     if (category && !validCategories.includes(category)) {
-      return res.status(400).json({ message: 'Invalid category' });
+      return res.status(400).json({ status:400, message: 'Invalid category' });
     }
 
     try {
@@ -516,16 +525,17 @@ router.get(
       const students = await Student.find(filter);
 
       if (students.length === 0) {
-        return res.status(404).json({ message: 'No students found matching the category filter' });
+        return res.status(404).json({status:404, message: 'No students found matching the category filter' });
       }
 
       res.status(200).json({
+        status:200,
         message: 'Students fetched successfully',
         students,
       });
     } catch (error) {
       console.error('Error fetching students:', error);
-      res.status(500).json({ message: 'Error fetching students', error });
+      res.status(500).json({ status:500,message: 'Error fetching students', error });
     }
   }
 );
@@ -552,16 +562,18 @@ router.get(
       const students = await Student.find(query);
 
       if (students.length === 0) {
-        return res.status(404).json({ message: 'No students found matching the house filters' });
+        return res.status(404).json({ status:404, message: 'No students found matching the house filters' });
       }
 
       res.status(200).json({
+        status:200,
         message: 'Students fetched successfully',
         students,
       });
     } catch (error) {
       console.error('Error fetching students:', error);
-      res.status(500).json({ message: 'Error fetching students', error });
+      
+      res.status(500).json({  status:500, message: 'Error fetching students', error });
     }
   }
 );
@@ -592,16 +604,17 @@ router.get(
       const students = await Student.find(query);
 
       if (students.length === 0) {
-        return res.status(404).json({ message: 'No students found matching the house filters' });
+        return res.status(404).json({status:404, message: 'No students found matching the house filters' });
       }
 
       res.status(200).json({
+        status:200,
         message: 'Students fetched successfully',
         students,
       });
     } catch (error) {
       console.error('Error fetching students:', error);
-      res.status(500).json({ message: 'Error fetching students', error });
+      res.status(500).json({ status:500,message: 'Error fetching students', error });
     }
   }
 );
@@ -613,6 +626,7 @@ router.post(
 
     if (!name || !description) {
       return res.status(400).json({
+        status:400,
         message: 'Both name and description are required.',
       });
     }
@@ -623,12 +637,13 @@ router.post(
       await blockReason.save();
 
       res.status(201).json({
+        status:201,
         message: 'Block reason added successfully.',
         blockReason,
       });
     } catch (error) {
       console.error('Error adding block reason:', error);
-      res.status(500).json({ message: 'Error adding block reason', error });
+      res.status(500).json({status:500, message: 'Error adding block reason', error });
     }
   }
 );
@@ -641,6 +656,7 @@ router.put(
 
     if (!name || !description) {
       return res.status(400).json({
+        status:400,
         message: 'Both name and description are required.',
       });
     }
@@ -654,16 +670,18 @@ router.put(
       );
 
       if (!blockReason) {
-        return res.status(404).json({ message: 'Block reason not found' });
+        return res.status(404).json({ status:404,message: 'Block reason not found' });
       }
 
       res.status(200).json({
+        status:200,
         message: 'Block reason updated successfully.',
         blockReason,
       });
     } catch (error) {
       console.error('Error editing block reason:', error);
-      res.status(500).json({ message: 'Error editing block reason', error });
+      
+      res.status(500).json({status:500, message: 'Error editing block reason', error });
     }
   }
 );
@@ -677,15 +695,17 @@ router.delete(
       const blockReason = await BlockReason.findByIdAndDelete(id);
 
       if (!blockReason) {
-        return res.status(404).json({ message: 'Block reason not found' });
+        return res.status(404).json({ status:404, message: 'Block reason not found' });
       }
 
       res.status(200).json({
+        status:200,
         message: 'Block reason deleted successfully.',
       });
     } catch (error) {
       console.error('Error deleting block reason:', error);
-      res.status(500).json({ message: 'Error deleting block reason', error });
+      
+      res.status(500).json({ status:500,message: 'Error deleting block reason', error });
     }
   }
 );
@@ -707,12 +727,13 @@ router.get(
     try {
       const blockReasons = await BlockReason.find(query);
       res.status(200).json({
+        status:200,
         message: 'Filtered block reasons fetched successfully.',
         blockReasons,
       });
     } catch (error) {
       console.error('Error filtering block reasons:', error);
-      res.status(500).json({ message: 'Error filtering block reasons', error });
+      res.status(500).json({ status:500,message: 'Error filtering block reasons', error });
     }
   }
 );

@@ -57,12 +57,12 @@ exports.login = async (req, res) => {
     // Step 1: Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email' });
+      return res.status(400).json({ status: 400,  message: 'Invalid email' });
     }
 
     // Step 2: Validate the provided password (plain-text comparison)
     if (user.password !== password) {  // Direct comparison (not recommended for production)
-      return res.status(400).json({ message: 'Invalid password' });
+      return res.status(400).json({ status: 400 , message: 'Invalid password' });
     }
 
     // Step 3: Generate JWT token without expiration (it will not expire automatically)
@@ -79,7 +79,6 @@ exports.login = async (req, res) => {
     // Step 4: Save the token in the database for tracking active sessions
     user.activeToken = token;
     await user.save();
-
     // Step 5: Return success response with the token
     let roleMessage = '';
     let accessKey = {};
@@ -93,12 +92,13 @@ exports.login = async (req, res) => {
     } else if (user.studentAccess) {
       roleMessage = 'Student login successful';
       accessKey = { "studentAccess": true };
-    } else {
+    } else{
       roleMessage = 'Login successful';
       accessKey = {};
     }
 
     res.status(200).json({
+      status: 200,
       message: roleMessage,
       token,
       access: accessKey
@@ -106,19 +106,17 @@ exports.login = async (req, res) => {
 
   } catch (err) {
     console.error('Error during login:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ status: 500 , message: 'Server error', error: err.message });
   }
 };
 
-// Logout controller
-// logout controller
 exports.logout = async (req, res) => {
   try {
     // Step 1: Get the user based on the token
     const user = await User.findById(req.user.userId); // Assuming req.user is set by the auth middleware
 
     if (!user) {
-      return res.status(400).json({ message: 'User not found' });
+      return res.status(400).json({status: 400, message: 'User not found' });
     }
 
     // Step 2: Invalidate the token
@@ -128,13 +126,21 @@ exports.logout = async (req, res) => {
     // Step 3: Clear the cookie
     res.clearCookie('token', { httpOnly: true, secure: true, sameSite: 'strict' });
 
-    // Step 4: Send a success message
-    return res.status(200).json({ message: 'Logout successful' });
+// Step 4: Send a success message
+return res.status(200).json({ 
+  status: 200, 
+  message: 'Logout successful' 
+});
 
-  } catch (err) {
-    console.error('Error during logout:', err);
-    return res.status(500).json({ message: 'Server error', error: err.message });
-  }
+} catch (err) {
+  console.error('Error during logout:', err);
+  return res.status(500).json({
+    status: 500,
+    message: 'Server error',
+    error: err.message || 'An unexpected error occurred'
+  });
+}
+
 };
 
 exports.isLoggedIn = async (req, res) => {
@@ -142,7 +148,7 @@ exports.isLoggedIn = async (req, res) => {
 
   // If no token is provided
   if (!token) {
-    return res.status(400).json({ message: 'No token provided, user is not logged in.' });
+    return res.status(400).json({ status: 400 , message: 'No token provided, user is not logged in.' });
   }
 
   try {
@@ -153,16 +159,17 @@ exports.isLoggedIn = async (req, res) => {
     const user = await User.findById(decoded.userId);
 
     if (!user) {
-      return res.status(400).json({ message: 'User not found, invalid token.' });
+      return res.status(400).json({ status: 400 , message: 'User not found, invalid token.' });
     }
 
     // Check if the token is valid (not blacklisted or replaced)
     if (user.activeToken !== token) {
-      return res.status(400).json({ message: 'Token is invalidated, user is logged out.' });
+      return res.status(400).json({  status: 400 , message: 'Token is invalidated, user is logged out.' });
     }
 
     // User is logged in, return their data
     return res.status(200).json({
+      status: 200,
       message: 'User is logged in.',
       data: {
         id: user._id,
@@ -174,10 +181,10 @@ exports.isLoggedIn = async (req, res) => {
   } catch (err) {
     // Handle token verification errors
     if (err.name === 'TokenExpiredError') {
-      return res.status(400).json({ message: 'Token has expired, user is logged out.' });
+      return res.status(400).json({ status: 400 , message: 'Token has expired, user is logged out.' });
     }
 
-    return res.status(401).json({ message: 'Invalid token, user is not logged in.' });
+    return res.status(401).json({ status: 401 , message: 'Invalid token, user is not logged in.' });
   }
 };
 
