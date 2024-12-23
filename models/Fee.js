@@ -8,7 +8,19 @@ const FeeSchema = new mongoose.Schema({
   section: { type: String, enum: ['A', 'B', 'C', 'D'], required: true },  // Ensure 'section' is defined here
   dueDate: { type: Date, required: true },
   status: { type: String, enum: ['Paid', 'Unpaid', 'Partial'], default: 'Unpaid' },
-  amount: { type: Number, required: true },
+  // Semester details
+  sem1: {
+    amount: { type: Number, required: true },
+    paid: { type: Number, default: 0 },
+    balance: { type: Number, required: true },
+    status: { type: String, enum: ['Paid', 'Unpaid', 'Partial'], default: 'Unpaid' },
+  },
+  sem2: {
+    amount: { type: Number, required: true },
+    paid: { type: Number, default: 0 },
+    balance: { type: Number, required: true },
+    status: { type: String, enum: ['Paid', 'Unpaid', 'Partial'], default: 'Unpaid' },
+  },
   paymentId: { type: String },
   mode: { type: String, enum: ['Cash', 'Cheque', 'DD', 'Bank Transfer', 'UPI', 'Card'], required: true },
   discount: { type: Number, default: 0 },

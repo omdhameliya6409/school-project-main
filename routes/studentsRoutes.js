@@ -80,16 +80,51 @@ router.post(
 // );
 
 // Route 2: Advanced filtering and sorting route
+// router.get(
+//   "/allstudent",
+//   authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
+//   async (req, res) => {
+//     const { name, studentClass, section, sortField = "name", sortOrder = "asc" } = req.query;
+
+//     // Build the search query
+//     const query = {};
+//     if (name) {
+//       query.name = { $regex: name, $options: "i" }; // Case-insensitive regex for name
+//     }
+//     if (studentClass) {
+//       query.class = studentClass;
+//     }
+//     if (section) {
+//       query.section = section;
+//     }
+
+//     // If the user is a teacher, filter students by assignedTeacher
+//     if (req.userTeacherId) {
+//       query.assignedTeacher = req.userTeacherId;
+//     }
+
+//     // Sorting logic
+//     const sortOptions = {};
+//     sortOptions[sortField] = sortOrder === "asc" ? 1 : -1;
+
+//     try {
+//       const students = await Student.find(query).sort(sortOptions);
+//       res.status(200).json({ status:200, message: "Filtered students retrieved successfully", students });
+//     } catch (error) {
+//       res.status(500).json({ status:500,message: "Error fetching filtered students", error });
+//     }
+//   }
+// );
 router.get(
   "/allstudent",
   authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
   async (req, res) => {
-    const { name, studentClass, section, sortField = "name", sortOrder = "asc" } = req.query;
+    const { rollNo, studentClass, section, sortField = "name", sortOrder = "asc" } = req.query;
 
     // Build the search query
     const query = {};
-    if (name) {
-      query.name = { $regex: name, $options: "i" }; // Case-insensitive regex for name
+    if (rollNo) {
+      query.rollNo = rollNo; // Filter by rollNo
     }
     if (studentClass) {
       query.class = studentClass;
@@ -109,12 +144,13 @@ router.get(
 
     try {
       const students = await Student.find(query).sort(sortOptions);
-      res.status(200).json({ status:200, message: "Filtered students retrieved successfully", students });
+      res.status(200).json({ status: 200, message: "Filtered students retrieved successfully", students });
     } catch (error) {
-      res.status(500).json({ status:500,message: "Error fetching filtered students", error });
+      res.status(500).json({ status: 500, message: "Error fetching filtered students", error });
     }
   }
 );
+
 // Edit student details (PUT) - Principal and Teacher can edit
 router.put(
   "/edit/:id",
