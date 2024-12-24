@@ -116,7 +116,7 @@ exports.logout = async (req, res) => {
     const user = await User.findById(req.user.userId); // Assuming req.user is set by the auth middleware
 
     if (!user) {
-      return res.status(400).json({status: 400, message: 'User not found' });
+      return res.status(400).json({status: 400, message: 'invalid token User not found' });
     }
 
     // Step 2: Invalidate the token

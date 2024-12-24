@@ -8,6 +8,6 @@ router.get('/studentfee/:studentId', feeController.getFeeDetails);  // Accessibl
 router.get('/searchpaymentByPaymentId', feeController.searchPaymentsByPaymentId);
 
 router.put('/studentfee/edit/:studentId', feeController.editFee);
-
+router.get('/multi-branch/overview', feeController.getFeeOverview);
 
 module.exports = router;
