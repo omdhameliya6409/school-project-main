@@ -13,6 +13,7 @@ const studentRoutes = require("./routes/studentsRoutes");
 const admissionRoutes = require('./routes/admissionRoutes');
 const feeRoutes = require('./routes/feeRoutes');
 const bookRoutes = require('./routes/BookRoutes'); // Import book routes
+const liveMeetingRoutes = require("./routes/liveMeetingRoutes");
 
 // Create app instance
 const app = express();
@@ -64,7 +65,7 @@ app.use('/admission', admissionRoutes);
 app.use(principalRoutes);
 app.use('/', feeRoutes);
 app.use('/books', bookRoutes); // Book Routes
-
+app.use("/livemeeting", liveMeetingRoutes);
 // Test Route
 app.get('/', (req, res) => {
   res.send('Hello, World!');
