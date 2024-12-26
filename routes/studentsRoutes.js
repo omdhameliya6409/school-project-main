@@ -518,6 +518,19 @@ router.delete(
     }
   }
 );
+router.delete("/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await StudentModel.findByIdAndDelete(id);
+    if (result) {
+      res.status(204).send(); // No content
+    } else {
+      res.status(404).json({ message: "Student not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
 router.delete(
   '/delete-all', // Route to delete all students
   authMiddleware(['principalAccess']), // Only principals can delete

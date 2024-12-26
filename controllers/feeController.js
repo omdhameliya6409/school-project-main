@@ -341,47 +341,64 @@ const feeStructure = {
 //   }
 // ];
 exports.collectFee = [
-  authMiddleware(["principalAccess", "teacherAccess"]), // Only allow principal and teacher to collect fee
+  authMiddleware(["principalAccess", "teacherAccess"]), // Only allow principal and teacher to collect fees
   async (req, res) => {
-    const { studentId } = req.params; // Student ID from URL (use req.params)
-    const { mode, amountPaid, discount, fine, feesGroup, feesCode, section, class: studentClass, semester } = req.body;
+    const { studentId } = req.params; // Student ID from URL
+    const {
+      mode,
+      amountPaid,
+      discount,
+      fine,
+      feesGroup,
+      feesCode,
+      section,
+      class: studentClass,
+      semester,
+    } = req.body;
 
     try {
       // Validate required fields
       if (!feesGroup || !feesCode || !section || !studentClass || !semester) {
-        return res.status(400).json({ status: 400, message: 'feesGroup, feesCode, section, class, and semester are required' });
+        return res.status(400).json({
+          status: 400,
+          message: "feesGroup, feesCode, section, class, and semester are required",
+        });
       }
 
       // Allowed payment modes
-      const allowedModes = ['Cash', 'Cheque', 'DD', 'Bank Transfer', 'UPI', 'Card'];
+      const allowedModes = ["Cash", "Cheque", "DD", "Bank Transfer", "UPI", "Card"];
       if (!allowedModes.includes(mode)) {
-        return res.status(400).json({ status: 400, message: `Invalid payment mode. Allowed modes are: ${allowedModes.join(', ')}` });
+        return res.status(400).json({
+          status: 400,
+          message: `Invalid payment mode. Allowed modes are: ${allowedModes.join(", ")}`,
+        });
       }
 
       // Convert studentId to ObjectId
       const studentIdObject = new mongoose.Types.ObjectId(studentId);
 
-      // Fetch the existing fee record for the student
+      // Fetch or create a fee record for the student
       let fee = await Fee.findOne({ studentId: studentIdObject, section, class: studentClass });
-
       if (!fee) {
-        // Create a new fee record if it doesn't exist
         const classFees = feeStructure[studentClass];
-
         if (!classFees) {
-          return res.status(400).json({ status: 400, message: "Class not found in fee structure" });
+          return res.status(400).json({
+            status: 400,
+            message: "Class not found in fee structure",
+          });
         }
 
+        // Initialize fee record
         fee = new Fee({
           studentId: studentIdObject,
-          feesGroup: feesGroup,
-          feesCode: feesCode,
-          section: section,
+          feesGroup,
+          feesCode,
+          section,
           class: studentClass,
-          dueDate: new Date(),
+          // dueDate: new Date(),
           status: "Unpaid",
           paymentId: uuidv4(),
-          mode: mode,
+          mode,
           discount: 0,
           fine: 0,
           paid: 0,
@@ -390,13 +407,13 @@ exports.collectFee = [
             amount: classFees.sem1,
             paid: 0,
             balance: classFees.sem1,
-            status: 'Unpaid',
+            status: "Unpaid",
           },
           sem2: {
             amount: classFees.sem2,
             paid: 0,
             balance: classFees.sem2,
-            status: 'Unpaid',
+            status: "Unpaid",
           },
           totalAmount: classFees.sem1 + classFees.sem2,
           totalPaid: 0,
@@ -406,83 +423,117 @@ exports.collectFee = [
 
       // Validate the semester field
       if (!fee[semester]) {
-        return res.status(400).json({ status: 400, message: "Invalid semester. Allowed semesters are: sem1, sem2." });
+        return res.status(400).json({
+          status: 400,
+          message: "Invalid semester. Allowed semesters are: sem1, sem2.",
+        });
       }
 
-      // Check if the semester fee is fully paid
-      if (fee[semester].status === 'Paid') {
-        // Allow partial payments to be added if the fee was fully paid earlier
-        fee[semester].status = 'Partial'; // Change status to 'Partial' as partial payment is being added
-      }
-
-      // Validate and ensure no negative values for discount, fine, and amount paid
+      // Ensure no negative values for discount, fine, and amount paid
       const validDiscount = Math.max(0, Math.min(isNaN(discount) ? 0 : Number(discount), fee[semester].amount));
-      const validAmountPaid = Math.max(0, isNaN(amountPaid) ? 0 : Number(amountPaid));
       const validFine = Math.max(0, isNaN(fine) ? 0 : Number(fine));
+      const validAmountPaid = Math.max(0, isNaN(amountPaid) ? 0 : Number(amountPaid));
 
-      // Calculate the total amount after discount and fine
-      const totalAmount = fee[semester].amount - validDiscount + validFine;
+      // Calculate the total fee for the semester after applying discount and fine
+      const totalFee = fee[semester].amount - validDiscount + validFine;
 
-      // Ensure the paid amount does not exceed the total amount
-      if (fee[semester].paid + validAmountPaid > totalAmount) {
-        return res.status(400).json({ status: 400, message: 'Paid amount cannot exceed the total fee amount' });
+      // Ensure the paid amount does not exceed the total fee
+      if (fee[semester].paid + validAmountPaid > totalFee) {
+        return res.status(400).json({
+          status: 400,
+          message: "Paid amount cannot exceed the total fee amount",
+        });
       }
 
-      // Update the balance and paid amount for the semester
-      const updatedBalance = totalAmount - (fee[semester].paid + validAmountPaid);
-
+      // Update semester-specific details
       fee[semester].paid += validAmountPaid;
-      fee[semester].balance = updatedBalance;
+      fee[semester].balance = totalFee - fee[semester].paid;
 
-      // Update the status based on the balance
-      if (fee[semester].balance <= 0) {
-        fee[semester].status = 'Paid'; // If balance is 0, the fee is fully paid
-      } else if (fee[semester].paid > 0 && fee[semester].balance > 0) {
-        fee[semester].status = 'Partial'; // If there's some amount paid but balance is still remaining
-      } else {
-        fee[semester].status = 'Unpaid'; // If no amount has been paid yet
-      }
+      // Update semester status
+      fee[semester].status =
+        fee[semester].balance === 0
+          ? "Paid"
+          : fee[semester].paid > 0
+          ? "Partial"
+          : "Unpaid";
 
-      // Update the overall status based on semester statuses
-      if (fee.sem1.status === 'Paid' && fee.sem2.status === 'Paid') {
-        fee.status = 'Paid'; // If both semesters are paid
-      } else if (fee.sem1.status === 'Partial' || fee.sem2.status === 'Partial') {
-        fee.status = 'Partial'; // If either semester is partially paid
-      } else {
-        fee.status = 'Unpaid'; // If both semesters are unpaid
-      }
+      // Update overall fee details
+      fee.paid = fee.sem1.paid + fee.sem2.paid;
+      fee.balance = fee.sem1.balance + fee.sem2.balance;
+      fee.discount = (fee.discount || 0) + validDiscount;
+      fee.fine = (fee.fine || 0) + validFine;
+      fee.status =
+        fee.sem1.status === "Paid" && fee.sem2.status === "Paid"
+          ? "Paid"
+          : fee.sem1.status === "Partial" || fee.sem2.status === "Partial"
+          ? "Partial"
+          : "Unpaid";
 
-      // Update the total balance
-      fee.totalBalance = fee.sem1.balance + fee.sem2.balance;
-
-      // Save the fee record
+      // Save the updated fee record
       await fee.save();
 
-      // Update the student's fee status as well
-      await Student.findByIdAndUpdate(studentIdObject, { feeStatus: fee.status });
+      // Update the student's fee status
+      await Student.findByIdAndUpdate(studentIdObject, {
+        feeStatus: fee.status,
+      });
 
-      // Message for fee status
-      let message = '';
-      if (fee.sem1.status === 'Paid' && fee.sem2.status === 'Paid') {
-        message = 'Both semester fees are fully paid.';
-      } else if (fee.sem1.status === 'Partial' || fee.sem2.status === 'Partial') {
-        message = `Remaining fee balance: ₹${fee.sem1.balance + fee.sem2.balance}`;
-      } else {
-        message = `Remaining fee balance: ₹${fee.sem1.balance + fee.sem2.balance}`;
-      }
+      // Prepare response message
+      const remainingBalance = fee.sem1.balance + fee.sem2.balance;
+      const message =
+        fee.status === "Paid"
+          ? "Both semester fees are fully paid."
+          : `Remaining fee balance: ₹${remainingBalance}`;
 
-      // Respond with the updated fee and message
+      // Respond with the updated fee and message, including detailed semester and total fee information
       res.status(200).json({
         status: 200,
         message: `Fee details updated successfully. ${message}`,
-        data: fee
+        data: {
+          _id: fee._id,
+          studentId: fee.studentId,
+          feesGroup: fee.feesGroup,
+          feesCode: fee.feesCode,
+          class: fee.class,
+          section: fee.section,
+          // dueDate: fee.dueDate,
+          status: fee.status,
+          paymentId: fee.paymentId,
+          mode: fee.mode,
+          discount: fee.discount,
+          fine: fee.fine,
+          createdAt: fee.createdAt,
+          updatedAt: fee.updatedAt,
+          __v: fee.__v,
+          sem1: {
+            amount: fee.sem1.amount,
+            paid: fee.sem1.paid,
+            balance: fee.sem1.balance,
+            status: fee.sem1.status,
+          },
+          sem2: {
+            amount: fee.sem2.amount,
+            paid: fee.sem2.paid,
+            balance: fee.sem2.balance,
+            status: fee.sem2.status,
+          },
+          total: {
+            paid: fee.paid,
+            balance: fee.balance,
+          },
+        },
       });
     } catch (err) {
-      console.error('Error collecting fee:', err);
-      res.status(500).json({ status: 500, message: 'Server error', error: err.message });
+      console.error("Error collecting fee:", err);
+      res.status(500).json({
+        status: 500,
+        message: "Server error",
+        error: err.message,
+      });
     }
-  }
+  },
 ];
+
+
 
 
 
@@ -735,7 +786,6 @@ exports.searchPaymentsByPaymentId = [
 //   }
 // ];
 
-
 exports.editFee = [
   authMiddleware(["principalAccess", "teacherAccess"]), // Only allow principal and teacher to edit fee
   async (req, res) => {
@@ -745,13 +795,19 @@ exports.editFee = [
     try {
       // Validate required fields
       if (!feesGroup || !feesCode || !section || !studentClass || !semester) {
-        return res.status(400).json({ status: 400, message: 'feesGroup, feesCode, section, class, and semester are required' });
+        return res.status(400).json({
+          status: 400,
+          message: 'Required fields: feesGroup, feesCode, section, class, and semester',
+        });
       }
 
       // Allowed payment modes
       const allowedModes = ['Cash', 'Cheque', 'DD', 'Bank Transfer', 'UPI', 'Card'];
       if (!allowedModes.includes(mode)) {
-        return res.status(400).json({ status: 400, message: `Invalid payment mode. Allowed modes are: ${allowedModes.join(', ')}` });
+        return res.status(400).json({
+          status: 400,
+          message: `Invalid payment mode. Allowed modes: ${allowedModes.join(', ')}`,
+        });
       }
 
       // Convert studentId to ObjectId
@@ -766,114 +822,125 @@ exports.editFee = [
 
       // Validate the semester field
       if (!fee[semester]) {
-        return res.status(400).json({ status: 400, message: "Invalid semester. Allowed semesters are: sem1, sem2." });
+        return res.status(400).json({
+          status: 400,
+          message: "Invalid semester. Allowed semesters: sem1, sem2",
+        });
       }
 
-      // Remove old fee details for the semester
-      fee[semester].paid = 0; // Reset the old paid amount
-      fee[semester].discount = 0; // Reset the old discount
-      fee[semester].fine = 0; // Reset the old fine
-      fee[semester].balance = fee[semester].amount; // Reset the balance to the original amount
+      // Reset old semester details
+      fee[semester] = {
+        ...fee[semester],
+        paid: 0,
+        discount: 0,
+        fine: 0,
+        balance: fee[semester].amount,
+        status: 'Unpaid',
+      };
 
-      // Validate and ensure no negative values for discount, fine, and amount paid
-      const validDiscount = Math.max(0, Math.min(isNaN(discount) ? 0 : Number(discount), fee[semester].amount));
-      const validAmountPaid = Math.max(0, isNaN(amountPaid) ? 0 : Number(amountPaid));
-      const validFine = Math.max(0, isNaN(fine) ? 0 : Number(fine));
+      // Validate discount, fine, and amountPaid
+      const validDiscount = Math.max(0, Math.min(Number(discount) || 0, fee[semester].amount));
+      const validFine = Math.max(0, Number(fine) || 0);
+      const validAmountPaid = Math.max(0, Number(amountPaid) || 0);
 
-      // Calculate the total amount after discount and fine
+      // Calculate total amount after adjustments
       const totalAmount = fee[semester].amount - validDiscount + validFine;
 
-      // Ensure the paid amount does not exceed the total amount
       if (validAmountPaid > totalAmount) {
-        return res.status(400).json({ status: 400, message: 'Paid amount cannot exceed the total fee amount' });
+        return res.status(400).json({ status: 400, message: 'Paid amount exceeds total fee' });
       }
 
-      // Update the balance and paid amount for the semester
-      fee[semester].paid += validAmountPaid;
-      fee[semester].discount = validDiscount;
-      fee[semester].fine = validFine;
-      fee[semester].balance = totalAmount - fee[semester].paid;
+      // Update semester details
+      fee[semester] = {
+        ...fee[semester],
+        paid: validAmountPaid,
+        discount: validDiscount,
+        fine: validFine,
+        balance: totalAmount - validAmountPaid,
+        status: validAmountPaid === totalAmount ? 'Paid' : validAmountPaid > 0 ? 'Partial' : 'Unpaid',
+      };
 
-      // Update the status based on the balance
-      if (fee[semester].balance <= 0) {
-        fee[semester].status = 'Paid'; // If balance is 0, the fee is fully paid
-      } else if (fee[semester].paid > 0 && fee[semester].balance > 0) {
-        fee[semester].status = 'Partial'; // If there's some amount paid but balance is still remaining
-      } else {
-        fee[semester].status = 'Unpaid'; // If no amount has been paid yet
-      }
+      // Update the total fee status
+      const allSemesters = [fee.sem1, fee.sem2];
+      fee.status = allSemesters.every(s => s.status === 'Paid')
+        ? 'Paid'
+        : allSemesters.some(s => s.status === 'Partial')
+        ? 'Partial'
+        : 'Unpaid';
 
-      // Update the overall status based on semester statuses
-      if (fee.sem1.status === 'Paid' && fee.sem2.status === 'Paid') {
-        fee.status = 'Paid'; // If both semesters are paid
-      } else if (fee.sem1.status === 'Partial' || fee.sem2.status === 'Partial') {
-        fee.status = 'Partial'; // If either semester is partially paid
-      } else {
-        fee.status = 'Unpaid'; // If both semesters are unpaid
-      }
-
-      // Fee status message based on the semester statuses
-      let message = '';
-      if (fee.sem1.status === 'Paid' && fee.sem2.status === 'Paid') {
-        message = 'Both semester fees are fully paid.';
-      } else if (fee.sem1.status === 'Partial' || fee.sem2.status === 'Partial') {
-        message = `Remaining fee balance: ₹${fee.sem1.balance + fee.sem2.balance}`;
-      } else {
-        message = `Remaining fee balance: ₹${fee.sem1.balance + fee.sem2.balance}`;
-      }
-
-      // Save the fee record
+      // Save fee record
       await fee.save();
 
-      // Update the Student's fee status
-      let student = await Student.findById(studentIdObject);
-
+      // Update student's fee status
+      const student = await Student.findById(studentIdObject);
       if (student) {
-        // Ensure feesDetails array exists
-        if (!student.feesDetails) {
-          student.feesDetails = []; // Initialize feesDetails array if it doesn't exist
-        }
+        student.feesDetails = student.feesDetails || [];
 
-        // Add fee details to the student
-        const feeDetail = {
-          feeRecordId: fee._id,
-          status: fee.status,
-        };
+        const existingDetail = student.feesDetails.find(
+          detail => detail.feeRecordId.toString() === fee._id.toString()
+        );
 
-        // Add or update the fee record in the student's `feesDetails` array
-        const existingFeeDetail = student.feesDetails.find(detail => detail.feeRecordId.toString() === fee._id.toString());
-
-        if (existingFeeDetail) {
-          existingFeeDetail.status = fee.status;
+        if (existingDetail) {
+          existingDetail.status = fee.status;
         } else {
-          student.feesDetails.push(feeDetail);
+          student.feesDetails.push({ feeRecordId: fee._id, status: fee.status });
         }
 
-        // Update the overall fee status for the student
-        if (fee.status === 'Paid' && student.feesDetails.every(detail => detail.status === 'Paid')) {
-          student.feeStatus = 'Paid';
-        } else if (student.feesDetails.some(detail => detail.status === 'Partial')) {
-          student.feeStatus = 'Partial';
-        } else {
-          student.feeStatus = 'Unpaid';
-        }
+        student.feeStatus = student.feesDetails.every(detail => detail.status === 'Paid')
+          ? 'Paid'
+          : student.feesDetails.some(detail => detail.status === 'Partial')
+          ? 'Partial'
+          : 'Unpaid';
 
-        // Save the student document
         await student.save();
       }
 
-      // Respond with the updated fee details and message
+      // Respond with updated details
       res.status(200).json({
         status: 200,
-        message: `Fee details updated successfully. ${message}`,
-        data: fee
+        message: `Fee updated successfully. Remaining balance: ₹${fee.sem1.balance + fee.sem2.balance}`,
+        data: {
+          _id: fee._id,
+          studentId: fee.studentId,
+          feesGroup: fee.feesGroup,
+          feesCode: fee.feesCode,
+          class: fee.class,
+          section: fee.section,
+          status: fee.status,
+          paymentId: fee.paymentId,
+          mode: fee.mode,
+          discount: fee.discount,
+          fine: fee.fine,
+          createdAt: fee.createdAt,
+          updatedAt: fee.updatedAt,
+          __v: fee.__v,
+          sem1: {
+            amount: fee.sem1.amount,
+            paid: fee.sem1.paid,
+            balance: fee.sem1.balance,
+            status: fee.sem1.status,
+          },
+          sem2: {
+            amount: fee.sem2.amount,
+            paid: fee.sem2.paid,
+            balance: fee.sem2.balance,
+            status: fee.sem2.status,
+          },
+          total: {
+            paid: fee.sem1.paid + fee.sem2.paid,
+            balance: fee.sem1.balance + fee.sem2.balance,
+          },
+        },
       });
     } catch (err) {
       console.error('Error editing fee:', err);
       res.status(500).json({ status: 500, message: 'Server error', error: err.message });
     }
-  }
+  },
 ];
+
+
+
 
 
 
