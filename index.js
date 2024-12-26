@@ -12,6 +12,7 @@ const principalRoutes = require('./routes/principalRoutes');
 const studentRoutes = require("./routes/studentsRoutes");
 const admissionRoutes = require('./routes/admissionRoutes');
 const feeRoutes = require('./routes/feeRoutes');
+const bookRoutes = require('./routes/BookRoutes'); // Import book routes
 
 // Create app instance
 const app = express();
@@ -62,17 +63,18 @@ app.use("/students", studentRoutes);
 app.use('/admission', admissionRoutes);
 app.use(principalRoutes);
 app.use('/', feeRoutes);
+app.use('/books', bookRoutes); // Book Routes
 
 // Test Route
 app.get('/', (req, res) => {
   res.send('Hello, World!');
 });
+
 // Error Handling Middleware (global)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "Something went wrong!" });
 });
-
 
 // Start Server
 const PORT = process.env.PORT || 3000;
