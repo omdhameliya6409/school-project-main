@@ -26,6 +26,7 @@ router.get(
 // Route to get a class report (requires role-based access)
 router.get(
   "/class-report",
+  authMiddleware(["principalAccess", "teacherAccess"]),
   getClassReport
 );
 

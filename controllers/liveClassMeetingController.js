@@ -31,7 +31,7 @@ exports.getAllLiveClassMeetings = async (req, res) => {
 };
 
 
-exports.getClassReport = authMiddleware(['principalAccess', 'teacherAccess']) ,async (req, res) => {
+exports.getClassReport = async (req, res) => {
     try {
       // Extract class and section from query parameters
       const { class: classFilter, section } = req.query;
