@@ -1013,7 +1013,7 @@ exports.editFee = [
 // };
 
 
-exports.getFeeOverview = async (req, res) => {
+exports.getFeeOverview = authMiddleware(['principalAccess', 'teacherAccess']) , async (req, res) => {
   try {
     const feeStructure = {
       "9": { sem1: 5000, sem2: 4000 },
