@@ -13,12 +13,20 @@ exports.createLiveClassMeeting = authMiddleware(['principalAccess', 'teacherAcce
 };
 
 // Get All Live Class Meetings
-exports.getAllLiveClassMeetings = authMiddleware(['principalAccess', 'teacherAccess']) ,async (req, res) => {
+exports.getAllLiveClassMeetings = async (req, res) => {
   try {
     const meetings = await LiveClassMeeting.find().sort({ dateTime: 1 });
-    res.status(200).json({ status: 200, message: "Live Class Meetings fetched successfully", data: meetings });
+    res.status(200).json({
+      status: 200,
+      message: "Live Class Meetings fetched successfully",
+      data: meetings,
+    });
   } catch (error) {
-    res.status(500).json({ status: 500, message: "Server error", error: error.message });
+    res.status(500).json({
+      status: 500,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
