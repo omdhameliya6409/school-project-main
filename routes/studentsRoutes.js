@@ -468,6 +468,7 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
     }
 
     res.status(200).json({
+      status:200,
       message: 'Students retrieved successfully',
       data: filteredStudents,
     });

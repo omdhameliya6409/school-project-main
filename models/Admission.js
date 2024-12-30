@@ -23,6 +23,10 @@ const admissionSchema = new mongoose.Schema({
   measurementDate: { type: Date },
   medicalHistory: { type: String },
   isBlocked: { type: Boolean, default: false },
+  feeAmount: {
+    type: Number,
+    required: true,
+    default: 2000, // Default fee amount
+  },
 });
-
 module.exports = mongoose.model('Admission', admissionSchema);

@@ -16,6 +16,7 @@ const bookRoutes = require('./routes/BookRoutes'); // Import book routes
 const liveMeetingRoutes = require("./routes/liveMeetingRoutes");
 const liveClassMeetingRoutes = require("./routes/liveClassMeetingRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
+const feeOverviewRoutes = require('./routes/feeOverviewRoutes');
 // Create app instance
 const app = express();
 
@@ -51,7 +52,7 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 app.use(express.json()); // Middleware to parse JSON requests
-
+app.use(express.urlencoded({ extended: true }));
 // Connect to Database
 dbconnect(); // Call the function to establish the database connection
 
@@ -65,6 +66,7 @@ app.use("/students", studentRoutes);
 app.use('/admission', admissionRoutes);
 app.use(principalRoutes);
 app.use('/', feeRoutes);
+app.use('/', feeOverviewRoutes);
 app.use('/books', bookRoutes); // Book Routes
 app.use("/livemeeting", liveMeetingRoutes);
 app.use("/liveclassmeeting", liveClassMeetingRoutes);
