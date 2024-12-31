@@ -361,7 +361,96 @@ exports.deleteLeave = async (req, res) => {
     });
   }
 };
+// // GET - Filter Leaves by Class and Section
+// exports.filterByClassAndSection = async (req, res) => {
+//   try {
+//     const { className, section } = req.query; // Get class and section from query params
 
+//     // Validate if both class and section are provided
+//     if (!className || !section) {
+//       return res.status(400).json({
+//         status: 400,
+//         message: "Both 'class' and 'section' are required."
+//       });
+//     }
 
+//     // Find leave records based on class and section
+//     const leaves = await Leave.find({ class: className, section: section });
 
+//     // If no records are found, return a message
+//     if (leaves.length === 0) {
+//       return res.status(404).json({
+//         status: 404,
+//         message: "No leave records found for the specified class and section."
+//       });
+//     }
 
+//     // Format the leave records (optional: you can format the dates if needed)
+//     const formattedLeaves = leaves.map(leave => ({
+//       ...leave.toObject(),
+//       applyDate: formatDateToDDMMYYYY(leave.applyDate),
+//       fromDate: formatDateToDDMMYYYY(leave.fromDate),
+//       toDate: formatDateToDDMMYYYY(leave.toDate),
+//     }));
+
+//     // Return the filtered leave records
+//     return res.status(200).json({
+//       status: 200,
+//       message: "Leave records fetched successfully.",
+//       leaves: formattedLeaves
+//     });
+
+//   } catch (error) {
+//     console.error("Error fetching leave records:", error);
+//     return res.status(500).json({
+//       status: 500,
+//       message: "An error occurred while fetching leave records.",
+//       error: error.message
+//     });
+//   }
+// };
+
+exports.LeavefilterByClassAndSection = async (req, res) => {
+  try {
+    const { class: className, section } = req.query; // Rename 'class' to 'className'
+    
+    console.log("Query Parameters:", req.query);  // Log the query parameters
+
+    if (!className || !section) {
+      return res.status(400).json({
+        status: 400,
+        message: "Both 'class' and 'section' are required."
+      });
+    }
+
+    const leaves = await Leave.find({ class: className, section: section });
+
+    if (leaves.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: "No leave records found for the specified class and section."
+      });
+    }
+
+    const formattedLeaves = leaves.map(leave => ({
+      ...leave.toObject(),
+      applyDate: formatDateToDDMMYYYY(leave.applyDate),
+      fromDate: formatDateToDDMMYYYY(leave.fromDate),
+      toDate: formatDateToDDMMYYYY(leave.toDate),
+    }));
+
+    return res.status(200).json({
+      status: 200,
+      message: "Leave records fetched successfully.",
+      leaves: formattedLeaves
+    });
+
+  } catch (error) {
+    console.error("Error fetching leave records:", error);
+    return res.status(500).json({
+      status: 500,
+      message: "An error occurred while fetching leave records.",
+      error: error.message
+    });
+  }
+};
