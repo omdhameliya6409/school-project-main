@@ -534,6 +534,10 @@ exports.collectFee = [
 ];
 
 
+
+
+
+
 // Get fee details for a student (Only principal and teacher can access this)
 exports.getFeeDetails = [
   authMiddleware(["principalAccess", "teacherAccess"]),  // Ensure you have access to this route

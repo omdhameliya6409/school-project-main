@@ -1,22 +1,18 @@
-// models/Teacher.js
 const mongoose = require('mongoose');
 
 const teacherSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Reference to the User model
-    required: true
-  },
-  // Add other teacher-specific fields here
-  name: {
-    type: String,
-    required: true
-  },
-  subject: {
-    type: String,
-    required: true
-  },
-  // other fields like email, etc.
+  teacherId: { type: Number, required: true, unique: true }, // Changed to Number
+  name: { type: String, required: true },
+  experience: { type: Number, required: true },
+  class: { type: String, required: true },
+  subject: { type: String, required: true },
+  section: { type: String, required: true },
+  mobileNumber: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  joinDate: { type: Date, default: Date.now },
+  gender: { type: String, required: true, enum: ['Male', 'Female', 'Other'] },
+  dateOfBirth: { type: Date, required: true },
 });
-const Teacher = mongoose.model('Teacher', teacherSchema);
-module.exports = Teacher;
+
+module.exports = mongoose.model('Teacher', teacherSchema);

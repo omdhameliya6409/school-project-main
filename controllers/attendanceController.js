@@ -1,6 +1,5 @@
 const Leave = require('../models/Leave'); // Import Leave model
 const Attendance = require('../models/Attendance'); // Import Attendance model
-const authMiddleware = require('../middleware/authMiddleware');
 
 // Helper function to parse "DD-MM-YYYY" into a JavaScript Date object
 function parseDateFromDDMMYYYY(dateStr) {
@@ -9,7 +8,7 @@ function parseDateFromDDMMYYYY(dateStr) {
 }
 
 // **Get attendance records with filters**
-exports.getAttendances = authMiddleware(["principalAccess", "teacherAccess"]), async (req, res, next) => {
+exports.getAttendances = async (req, res, next) => {
   const { section, class: className, attendanceDate } = req.query;
 
   if (!section || !className || !attendanceDate) {
@@ -53,7 +52,7 @@ exports.getAttendances = authMiddleware(["principalAccess", "teacherAccess"]), a
 };
 
 // **Add a new attendance record**
-exports.addAttendance =authMiddleware(["principalAccess", "teacherAccess"]), async (req, res) => {
+exports.addAttendance = async (req, res) => {
   try {
     const { admissionNo, rollNo, name, class: className, section, attendanceDate, attendanceStatus } = req.body;
 
@@ -97,7 +96,7 @@ exports.addAttendance =authMiddleware(["principalAccess", "teacherAccess"]), asy
 };
 
 // **Update attendance status**
-exports.updateAttendance = authMiddleware(["principalAccess", "teacherAccess"]), async (req, res, next) => {
+exports.updateAttendance = async (req, res, next) => {
   const { id } = req.params;
   const { attendanceStatus } = req.body;
 
@@ -140,7 +139,7 @@ function parseDateFromDDMMYYYY(dateStr) {
 
 
 // POST - Apply Leave
-exports.applyLeave =authMiddleware(["principalAccess", "teacherAccess"]), async (req, res) => {
+exports.applyLeave = async (req, res) => {
   try {
     const { name, class: className, section, applyDate, fromDate, toDate, status, reason, admissionNo } = req.body;
 
@@ -233,7 +232,7 @@ exports.applyLeave =authMiddleware(["principalAccess", "teacherAccess"]), async 
 
 
 // PUT - Edit Leave
-exports.editLeave =authMiddleware(["principalAccess", "teacherAccess"]), async (req, res) => {
+exports.editLeave = async (req, res) => {
   try {
     const { leaveId } = req.params; // Leave ID from URL params
     const { name, class: className, section, applyDate, fromDate, toDate, status, reason, admissionNo } = req.body;
@@ -332,7 +331,7 @@ exports.editLeave =authMiddleware(["principalAccess", "teacherAccess"]), async (
   }
 };
 // DELETE - Delete Leave by ID
-exports.deleteLeave = authMiddleware(["principalAccess", "teacherAccess"]),async (req, res) => {
+exports.deleteLeave = async (req, res) => {
   try {
     const { leaveId } = req.params; // Leave ID from URL params
 
@@ -411,7 +410,7 @@ exports.deleteLeave = authMiddleware(["principalAccess", "teacherAccess"]),async
 //   }
 // };
 
-exports.LeavefilterByClassAndSection =authMiddleware(["principalAccess", "teacherAccess"]), async (req, res) => {
+exports.LeavefilterByClassAndSection = async (req, res) => {
   try {
     const { class: className, section } = req.query; // Rename 'class' to 'className'
     
