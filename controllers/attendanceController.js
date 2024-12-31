@@ -1,146 +1,120 @@
 const Attendance = require('../models/Attendance');
-const Student = require('../models/Student');
 
-// GET: View students by class, section, and date with their attendance status
-exports.getStudentsByClassAndSection = async (req, res) => {
-  const { class: className, section, date } = req.query;
+// Get attendances with filters (section, class, attendanceDate, date range)
+exports.getAttendances = async (req, res, next) => {
+  const { section, class: className, attendanceDate, startDate, endDate } = req.query;
+  
+  // Check if required fields are present
+  if (!section || !className || !attendanceDate) {
+    return res.status(400).json({
+      message: "Missing required parameters: section, class, and attendanceDate are required."
+    });
+  }
 
   try {
-    console.log('Received query:', req.query);
+    const filter = {};
 
-    // Validate inputs
-    if (!className || !section || !date) {
-      return res.status(400).json({ message: 'Class, section, and date are required' });
+    // Filter by section
+    filter.section = section;
+
+    // Filter by class
+    filter.class = className;
+
+    // Filter by single attendance date
+    const parsedAttendanceDate = new Date(attendanceDate);
+    if (isNaN(parsedAttendanceDate)) {
+      return res.status(400).json({ message: "Invalid attendance date" });
+    }
+    filter.attendanceDate = parsedAttendanceDate;
+
+    // Filter by date range (startDate to endDate)
+    if (startDate && endDate) {
+      const parsedStartDate = new Date(startDate);
+      const parsedEndDate = new Date(endDate);
+      if (isNaN(parsedStartDate) || isNaN(parsedEndDate)) {
+        return res.status(400).json({ message: "Invalid date range" });
+      }
+      filter.attendanceDate = { $gte: parsedStartDate, $lte: parsedEndDate };
     }
 
-    const parsedDate = new Date(date);
-    if (isNaN(parsedDate)) {
-      return res.status(400).json({ message: 'Invalid date format' });
-    }
-
-    // Fetch students by class and section
-    const students = await Student.find({
-      class: className, // Using 'class' here
-      section: section,
-    });
-
-    if (!students || students.length === 0) {
-      return res.status(404).json({ message: 'No students found for the given class and section' });
-    }
-
-    // Attendance date range
-    const startDate = new Date(parsedDate);
-    startDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(parsedDate);
-    endDate.setHours(23, 59, 59, 999);
-
-    // Map attendance status to students
-    const studentsWithAttendance = await Promise.all(
-      students.map(async (student) => {
-        try {
-          const attendanceRecord = await Attendance.findOne({
-            studentId: student._id,
-            attendanceDate: { $gte: startDate, $lte: endDate },
-          });
-
-          return {
-            admissionNo: student.admissionNo,
-            rollNumber: student.rollNo,
-            name: student.name,
-            attendanceStatus: attendanceRecord
-              ? attendanceRecord.attendanceStatus
-              : 'No Data',
-          };
-        } catch (err) {
-          console.error(`Error fetching attendance for ${student.admissionNo}: ${err.message}`);
-          return {
-            admissionNo: student.admissionNo,
-            rollNumber: student.rollNo,
-            name: student.name,
-            attendanceStatus: 'Error',
-          };
-        }
-      })
-    );
-
-    res.status(200).json({
-      class: `Class ${className}`,
-      section,
-      date: parsedDate.toISOString().split('T')[0],
-      students: studentsWithAttendance.map((student, index) => ({
-        number: index + 1,
-        ...student,
-      })),
-    });
-  } catch (error) {
-    console.error('Error in getStudentsByClassAndSection:', error.message);
-    res.status(500).json({ message: error.message });
+    const attendances = await Attendance.find(filter);
+    res.status(200).json(attendances);
+  } catch (err) {
+    next(err);
   }
 };
-// POST: Add or update Attendance Record (update if already exists)
+
 exports.addAttendance = async (req, res) => {
-  const { admissionNo, attendanceDate, attendanceStatus, class: className, section, rollNo, name } = req.body;
-
   try {
-    // Ensure all required fields are provided
-    if (!admissionNo || !attendanceDate || !attendanceStatus || !className || !section || !rollNo || !name) {
-      return res.status(400).json({ message: 'All fields are required' });
+    const { admissionNo, rollNo, name, class: className, section, attendanceDate, attendanceStatus } = req.body;
+
+    // Convert the date to the correct format (DD-MM-YYYY to YYYY-MM-DD)
+    const [day, month, year] = attendanceDate.split('-'); // Assuming the date format is DD-MM-YYYY
+    const formattedDate = `${year}-${month}-${day}`; // Change it to YYYY-MM-DD
+
+    // Parse the date into a JavaScript Date object
+    const parsedAttendanceDate = new Date(formattedDate); 
+
+    // Check if the date is valid
+    if (isNaN(parsedAttendanceDate)) {
+      return res.status(400).json({ message: "Invalid attendance date" });
     }
 
-    // Convert the attendanceDate to a Date object
-    const parsedDate = new Date(attendanceDate);
-    if (isNaN(parsedDate)) {
-      return res.status(400).json({ message: 'Invalid date format' });
-    }
-
-    // Check if an attendance record already exists for this student on this date, class, and section
+    // Try to find the attendance record for this student and date to prevent duplicates
     const existingAttendance = await Attendance.findOne({
       admissionNo,
-      attendanceDate: parsedDate,
-      class: className,
-      section,
+      attendanceDate: parsedAttendanceDate
     });
 
     if (existingAttendance) {
-      // If attendance exists, update the attendanceStatus with the latest one
-      existingAttendance.attendanceStatus = attendanceStatus;
-      await existingAttendance.save();
-      return res.status(200).json({
-        message: 'Attendance status updated successfully',
-        data: existingAttendance,
-      });
+      return res.status(400).json({ message: "Attendance for this date already exists" });
     }
 
-    // If no existing attendance record, create a new one
+    // Create a new attendance record for this student on the selected date
     const newAttendance = new Attendance({
       admissionNo,
-      attendanceDate: parsedDate,
-      attendanceStatus,
-      class: className,
-      section,
       rollNo,
       name,
+      class: className,
+      section,
+      attendanceDate: parsedAttendanceDate,
+      attendanceStatus
     });
 
-    // Save the new attendance record
     await newAttendance.save();
-    console.log(`Added new attendance record for admissionNo: ${admissionNo}`);
 
-    // Return success response
-    res.status(201).json({ message: 'Attendance added successfully', data: newAttendance });
-
+    return res.status(201).json({ message: "Attendance added successfully", attendance: newAttendance });
   } catch (error) {
-    // Handle duplicate key error (this shouldn't happen if the attendance record is properly checked before insertion)
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Duplicate attendance record for the same date and class' });
-    }
-    console.error('Error adding attendance:', error.message);
-    res.status(500).json({ message: error.message });
+    console.error("Error adding attendance:", error);
+    return res.status(500).json({ message: "Error adding attendance", error });
   }
 };
 
 
+// Update an existing attendance record (change attendance status)
+exports.updateAttendance = async (req, res, next) => {
+  const { id } = req.params;
+  const { attendanceStatus } = req.body;
 
+  // Validate the new attendance status
+  const validStatuses = ['Present', 'Absent', 'Late']; 
+  if (!validStatuses.includes(attendanceStatus)) {
+    return res.status(400).json({ message: "Invalid attendance status" });
+  }
 
+  try {
+    const updatedAttendance = await Attendance.findByIdAndUpdate(
+      id,
+      { attendanceStatus },
+      { new: true }
+    );
 
+    if (!updatedAttendance) {
+      return res.status(404).json({ message: 'Attendance record not found' });
+    }
+
+    res.status(200).json(updatedAttendance);
+  } catch (err) {
+    next(err);
+  }
+};

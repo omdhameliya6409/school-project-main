@@ -1,8 +1,10 @@
-const Student = require('../models/Student'); // Adjust the model path as needed
-const Fee = require('../models/Fee'); // Adjust the model path as needed
+const Admission = require('../models/Admission');
+const Fee = require('../models/Fee');
+const Student = require('../models/Student');
 
-exports.getFeeOverview = async (req, res) => {
+exports.getOverview = async (req, res) => {
   try {
+    // Fee structure for each class
     const feeStructure = {
       "9": { sem1: 5000, sem2: 4000 },
       "10": { sem1: 6000, sem2: 5000 },
@@ -51,56 +53,99 @@ exports.getFeeOverview = async (req, res) => {
     // Calculate unpaid fees (total fees - paid fees)
     const totalUnpaidFees = totalFees - totalPaidFees;
 
-    // Return the fee overview response
+    // Get the total number of admissions
+    const totalAdmissions = await Admission.countDocuments();
+
+    // Get distinct classes and count students per class (e.g., 9, 10, 11, 12)
+    const classWiseAdmissions = await Admission.aggregate([
+      {
+        $group: {
+          _id: "$class",  // Group by class
+          totalStudents: { $sum: 1 },  // Count the number of students per class
+        }
+      },
+      {
+        $sort: { _id: 1 }  // Sort by class in ascending order (9, 10, 11, 12)
+      }
+    ]);
+
+    // Get the distinct sections and their counts per class
+    const classSectionWise = await Admission.aggregate([
+      {
+        $group: {
+          _id: { class: "$class", section: "$section" },  // Group by both class and section
+          totalStudents: { $sum: 1 },  // Count the number of students in each class-section combination
+        }
+      },
+      {
+        $sort: { "_id.class": 1, "_id.section": 1 }  // Sort by class and section
+      }
+    ]);
+
+    // Format the class and section data for better readability
+    const formattedClassSectionWise = classSectionWise.reduce((acc, curr) => {
+      if (!acc[curr._id.class]) acc[curr._id.class] = [];
+      acc[curr._id.class].push({ section: curr._id.section, totalStudents: curr.totalStudents });
+      return acc;
+    }, {});
+
+    // Return the combined overview data
     return res.status(200).json({
       status: 200,
-      message: "Fee overview retrieved successfully",
+      message: "Overview retrieved successfully",
       data: {
-        totalStudents,
-        totalFees,
-        totalPaidFees,
-        totalUnpaidFees,
-        classOverview: {
-          "9": {
-            students: students.filter(student => student.class === "9").length,
-            totalFees: feeStructure["9"].sem1 + feeStructure["9"].sem2,
-            totalPaidFeesSem1,
-            totalPaidFeesSem2,
-            totalUnpaidFeesSem1: feeStructure["9"].sem1 * students.filter(student => student.class === "9").length - totalPaidFeesSem1,
-            totalUnpaidFeesSem2: feeStructure["9"].sem2 * students.filter(student => student.class === "9").length - totalPaidFeesSem2,
-          },
-          "10": {
-            students: students.filter(student => student.class === "10").length,
-            totalFees: feeStructure["10"].sem1 + feeStructure["10"].sem2,
-            totalPaidFeesSem1,
-            totalPaidFeesSem2,
-            totalUnpaidFeesSem1: feeStructure["10"].sem1 * students.filter(student => student.class === "10").length - totalPaidFeesSem1,
-            totalUnpaidFeesSem2: feeStructure["10"].sem2 * students.filter(student => student.class === "10").length - totalPaidFeesSem2,
-          },
-          "11": {
-            students: students.filter(student => student.class === "11").length,
-            totalFees: feeStructure["11"].sem1 + feeStructure["11"].sem2,
-            totalPaidFeesSem1,
-            totalPaidFeesSem2,
-            totalUnpaidFeesSem1: feeStructure["11"].sem1 * students.filter(student => student.class === "11").length - totalPaidFeesSem1,
-            totalUnpaidFeesSem2: feeStructure["11"].sem2 * students.filter(student => student.class === "11").length - totalPaidFeesSem2,
-          },
-          "12": {
-            students: students.filter(student => student.class === "12").length,
-            totalFees: feeStructure["12"].sem1 + feeStructure["12"].sem2,
-            totalPaidFeesSem1,
-            totalPaidFeesSem2,
-            totalUnpaidFeesSem1: feeStructure["12"].sem1 * students.filter(student => student.class === "12").length - totalPaidFeesSem1,
-            totalUnpaidFeesSem2: feeStructure["12"].sem2 * students.filter(student => student.class === "12").length - totalPaidFeesSem2,
+        admissionOverview: {
+          totalAdmissions,
+          classWiseAdmissions,
+          classSectionWise: formattedClassSectionWise,
+        },
+        feeOverview: {
+          totalStudents,
+          totalFees,
+          totalPaidFees,
+          totalUnpaidFees,
+          classOverview: {
+            "9": {
+              students: students.filter(student => student.class === "9").length,
+              totalFees: feeStructure["9"].sem1 + feeStructure["9"].sem2,
+              totalPaidFeesSem1,
+              totalPaidFeesSem2,
+              totalUnpaidFeesSem1: feeStructure["9"].sem1 * students.filter(student => student.class === "9").length - totalPaidFeesSem1,
+              totalUnpaidFeesSem2: feeStructure["9"].sem2 * students.filter(student => student.class === "9").length - totalPaidFeesSem2,
+            },
+            "10": {
+              students: students.filter(student => student.class === "10").length,
+              totalFees: feeStructure["10"].sem1 + feeStructure["10"].sem2,
+              totalPaidFeesSem1,
+              totalPaidFeesSem2,
+              totalUnpaidFeesSem1: feeStructure["10"].sem1 * students.filter(student => student.class === "10").length - totalPaidFeesSem1,
+              totalUnpaidFeesSem2: feeStructure["10"].sem2 * students.filter(student => student.class === "10").length - totalPaidFeesSem2,
+            },
+            "11": {
+              students: students.filter(student => student.class === "11").length,
+              totalFees: feeStructure["11"].sem1 + feeStructure["11"].sem2,
+              totalPaidFeesSem1,
+              totalPaidFeesSem2,
+              totalUnpaidFeesSem1: feeStructure["11"].sem1 * students.filter(student => student.class === "11").length - totalPaidFeesSem1,
+              totalUnpaidFeesSem2: feeStructure["11"].sem2 * students.filter(student => student.class === "11").length - totalPaidFeesSem2,
+            },
+            "12": {
+              students: students.filter(student => student.class === "12").length,
+              totalFees: feeStructure["12"].sem1 + feeStructure["12"].sem2,
+              totalPaidFeesSem1,
+              totalPaidFeesSem2,
+              totalUnpaidFeesSem1: feeStructure["12"].sem1 * students.filter(student => student.class === "12").length - totalPaidFeesSem1,
+              totalUnpaidFeesSem2: feeStructure["12"].sem2 * students.filter(student => student.class === "12").length - totalPaidFeesSem2,
+            },
           },
         },
       },
     });
   } catch (error) {
-    console.error("Error fetching fee overview:", error);
+    console.error("Error fetching overview:", error);
     return res.status(500).json({
       status: 500,
-      message: "An error occurred while fetching fee overview",
+      message: "An error occurred while fetching the overview",
     });
   }
 };

@@ -1,10 +1,14 @@
-const express = require('express');
-const router = express.Router();
-const attendanceController = require('../controllers/attendanceController');
+const express = require("express");
+const {
+  getAttendances,
+  addAttendance,
+  updateAttendance,
+} = require("../controllers/attendanceController");
 
-// Routes
-router.get('/attendance', attendanceController.getStudentsByClassAndSection);
-router.post('/attendance', attendanceController.addAttendance);
+const router = express.Router();
+
+router.get("/Attendanceslist", getAttendances); 
+router.post("/add", addAttendance);       
+router.put("/:id", updateAttendance);   
 
 module.exports = router;
-    
