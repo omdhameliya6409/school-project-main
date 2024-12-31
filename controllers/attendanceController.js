@@ -1,5 +1,6 @@
 const Leave = require('../models/Leave'); // Import Leave model
 const Attendance = require('../models/Attendance'); // Import Attendance model
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Helper function to parse "DD-MM-YYYY" into a JavaScript Date object
 function parseDateFromDDMMYYYY(dateStr) {
@@ -8,7 +9,7 @@ function parseDateFromDDMMYYYY(dateStr) {
 }
 
 // **Get attendance records with filters**
-exports.getAttendances = async (req, res, next) => {
+exports.getAttendances = authMiddleware(["principalAccess", "teacherAccess"]), async (req, res, next) => {
   const { section, class: className, attendanceDate } = req.query;
 
   if (!section || !className || !attendanceDate) {
@@ -52,7 +53,7 @@ exports.getAttendances = async (req, res, next) => {
 };
 
 // **Add a new attendance record**
-exports.addAttendance = async (req, res) => {
+exports.addAttendance =authMiddleware(["principalAccess", "teacherAccess"]), async (req, res) => {
   try {
     const { admissionNo, rollNo, name, class: className, section, attendanceDate, attendanceStatus } = req.body;
 
@@ -88,7 +89,7 @@ exports.addAttendance = async (req, res) => {
 
     await newAttendance.save();
 
-    return res.status(201).json({ status: 201, message: "Attendance added successfully", attendance: newAttendance });
+    return res.status(200).json({ status: 200, message: "Attendance added successfully", attendance: newAttendance });
   } catch (error) {
     console.error("Error adding attendance:", error);
     return res.status(500).json({ status: 500, message: "Error adding attendance", error });
@@ -96,7 +97,7 @@ exports.addAttendance = async (req, res) => {
 };
 
 // **Update attendance status**
-exports.updateAttendance = async (req, res, next) => {
+exports.updateAttendance = authMiddleware(["principalAccess", "teacherAccess"]), async (req, res, next) => {
   const { id } = req.params;
   const { attendanceStatus } = req.body;
 
@@ -139,7 +140,7 @@ function parseDateFromDDMMYYYY(dateStr) {
 
 
 // POST - Apply Leave
-exports.applyLeave = async (req, res) => {
+exports.applyLeave =authMiddleware(["principalAccess", "teacherAccess"]), async (req, res) => {
   try {
     const { name, class: className, section, applyDate, fromDate, toDate, status, reason, admissionNo } = req.body;
 
@@ -214,8 +215,8 @@ exports.applyLeave = async (req, res) => {
       __v: leave.__v,
     };
 
-    return res.status(201).json({
-      status: 201,
+    return res.status(200).json({
+      status: 200,
       message: "Leave applied successfully.",
       leave: formattedLeave
     });
@@ -232,7 +233,7 @@ exports.applyLeave = async (req, res) => {
 
 
 // PUT - Edit Leave
-exports.editLeave = async (req, res) => {
+exports.editLeave =authMiddleware(["principalAccess", "teacherAccess"]), async (req, res) => {
   try {
     const { leaveId } = req.params; // Leave ID from URL params
     const { name, class: className, section, applyDate, fromDate, toDate, status, reason, admissionNo } = req.body;
@@ -331,7 +332,7 @@ exports.editLeave = async (req, res) => {
   }
 };
 // DELETE - Delete Leave by ID
-exports.deleteLeave = async (req, res) => {
+exports.deleteLeave = authMiddleware(["principalAccess", "teacherAccess"]),async (req, res) => {
   try {
     const { leaveId } = req.params; // Leave ID from URL params
 
@@ -410,7 +411,7 @@ exports.deleteLeave = async (req, res) => {
 //   }
 // };
 
-exports.LeavefilterByClassAndSection = async (req, res) => {
+exports.LeavefilterByClassAndSection =authMiddleware(["principalAccess", "teacherAccess"]), async (req, res) => {
   try {
     const { class: className, section } = req.query; // Rename 'class' to 'className'
     
