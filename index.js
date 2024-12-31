@@ -18,6 +18,8 @@ const liveClassMeetingRoutes = require("./routes/liveClassMeetingRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const feeOverviewRoutes = require('./routes/feeOverviewRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
+const classTimetableRoutes = require('./routes/classTimetableRoutes');
 // Create app instance
 const app = express();
 
@@ -73,6 +75,9 @@ app.use("/livemeeting", liveMeetingRoutes);
 app.use("/liveclassmeeting", liveClassMeetingRoutes);
 app.use("/attendance", attendanceRoutes);
 app.use("/teacher", teacherRoutes);
+app.use("/schedule", scheduleRoutes);
+app.use('/classTimetable', classTimetableRoutes);
+
 // Test Route
 app.get('/', (req, res) => {
   res.send('Hello, World!');
