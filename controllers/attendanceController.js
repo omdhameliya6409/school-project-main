@@ -25,7 +25,7 @@ exports.getAttendances = async (req, res, next) => {
     // Parse the attendanceDate from "DD-MM-YYYY"
     const parsedDate = parseDateFromDDMMYYYY(attendanceDate);
     if (isNaN(parsedDate)) {
-      return res.status(400).json({ message: "Invalid attendance date format. Use DD-MM-YYYY." });
+      return res.status(400).json({ status: 400 , message: "Invalid attendance date format. Use DD-MM-YYYY." });
     }
 
     // Filter for the start and end of the day
@@ -41,6 +41,7 @@ exports.getAttendances = async (req, res, next) => {
 
     if (attendances.length === 0) {
       return res.status(404).json({
+        status: 404,
         message: "No attendance records found for the provided filters."
       });
     }
@@ -59,7 +60,7 @@ exports.addAttendance = async (req, res) => {
     // Parse the attendanceDate from "DD-MM-YYYY"
     const parsedAttendanceDate = parseDateFromDDMMYYYY(attendanceDate);
     if (isNaN(parsedAttendanceDate)) {
-      return res.status(400).json({ message: "Invalid attendance date format. Use DD-MM-YYYY." });
+      return res.status(400).json({status: 400  , message: "Invalid attendance date format. Use DD-MM-YYYY." });
     }
 
     // Check for existing attendance on the same date
@@ -72,7 +73,7 @@ exports.addAttendance = async (req, res) => {
     });
 
     if (existingAttendance) {
-      return res.status(400).json({ message: "Attendance for this date already exists" });
+      return res.status(400).json({ status: 400 , message: "Attendance for this date already exists" });
     }
 
     // Create a new attendance record
@@ -88,10 +89,10 @@ exports.addAttendance = async (req, res) => {
 
     await newAttendance.save();
 
-    return res.status(201).json({ message: "Attendance added successfully", attendance: newAttendance });
+    return res.status(201).json({ status: 201 ,message: "Attendance added successfully", attendance: newAttendance });
   } catch (error) {
     console.error("Error adding attendance:", error);
-    return res.status(500).json({ message: "Error adding attendance", error });
+    return res.status(500).json({ status: 500 , message: "Error adding attendance", error });
   }
 };
 
@@ -102,7 +103,7 @@ exports.updateAttendance = async (req, res, next) => {
 
   const validStatuses = ['Present', 'Absent', 'Late'];
   if (!validStatuses.includes(attendanceStatus)) {
-    return res.status(400).json({ message: "Invalid attendance status" });
+    return res.status(400).json({ status: 400 , message: "Invalid attendance status" });
   }
 
   try {
@@ -113,7 +114,7 @@ exports.updateAttendance = async (req, res, next) => {
     );
 
     if (!updatedAttendance) {
-      return res.status(404).json({ message: 'Attendance record not found' });
+      return res.status(404).json({ status: 404 , message: 'Attendance record not found' });
     }
 
     res.status(200).json(updatedAttendance);
