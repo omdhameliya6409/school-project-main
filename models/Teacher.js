@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 
-
 const teacherSchema = new mongoose.Schema({
-  teacherId: { type: Number, required: true, unique: true },
+  teacherId: { type: Number, required: true },
   name: { type: String, required: true },
   experience: { type: Number, required: true },
   class: { type: String, required: true },
@@ -14,7 +13,12 @@ const teacherSchema = new mongoose.Schema({
   joinDate: { type: Date, default: Date.now },
   gender: { type: String, required: true, enum: ['Male', 'Female', 'Other'] },
   dateOfBirth: { type: Date, required: true },
+  category: { 
+    type: String, 
+    enum: ['General', 'OBC', 'SC', 'ST'], // Only these values are allowed
+    required: true 
+  }, // Added category field with enum
 });
 
-
 module.exports = mongoose.model('Teacher', teacherSchema);
+
