@@ -8,12 +8,12 @@ const subjectController = require('../controllers/subjectController');
 router.post('/add', subjectController.addSubject);
 
 // PUT: Edit an existing subject
-router.put('/:id', subjectController.editSubject);
+router.put('/edit/:id', subjectController.editSubject);
 
 // GET: Get all subjects
-router.get('/', subjectController.getSubjects);
+router.get('/list', subjectController.getSubjects);
 
 // DELETE: Delete a subject
-router.delete('/:id', subjectController.deleteSubject);
+router.delete('/delete/:id', subjectController.deleteSubject);
 
 module.exports = router;
