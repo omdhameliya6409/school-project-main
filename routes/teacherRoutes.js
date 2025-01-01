@@ -2,7 +2,7 @@ const express = require('express');
 
 const {
   addTeacher,
-  updateTeacher,
+  getTeacherList,
   getTeachers,
   deleteTeacher,
 } = require('../controllers/teacherController');
@@ -12,6 +12,6 @@ const router = express.Router();
 
 // POST route to add a new teacher and user
 router.post('/add', authMiddleware(["principalAccess"]) ,addTeacher);
-
+router.get('/list' , authMiddleware(["principalAccess"]), getTeacherList);
 
 module.exports = router;

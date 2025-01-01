@@ -214,6 +214,43 @@ const addTeacher = async (req, res) => {
   }
 };
 
+const getTeacherList = async (req, res) => {
+  try {
+    // Destructure class and section from the query parameters
+    const { class: teacherClass, section } = req.query;
+
+    // Validate that at least one filter is provided (class or section)
+    if (!teacherClass && !section) {
+      return res.status(400).json({ message: 'Class or section must be provided as query parameters.' });
+    }
+
+    // Build the filter object for the query
+    const filter = {};
+    if (teacherClass) {
+      filter.class = teacherClass;  // Add class filter if provided
+    }
+    if (section) {
+      filter.section = { $in: section.split(',') };  // Split and match the section filter if provided
+    }
+
+    // Find teachers based on the filter criteria
+    const teachers = await Teacher.find(filter);
+
+    // If no teachers found, return a message
+    if (teachers.length === 0) {
+      return res.status(404).json({ message: 'No teachers found for the given class and/or section.' });
+    }
+
+    // Return the list of teachers
+    res.status(200).json({
+      message: 'Teacher list fetched successfully.',
+      teachers,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
 
 
-module.exports = { addTeacher };
+module.exports = { addTeacher , getTeacherList};
