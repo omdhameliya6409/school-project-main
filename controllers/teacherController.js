@@ -194,7 +194,7 @@ const addTeacher = async (req, res) => {
       username: `${firstName} ${lastName}`,
       principalAccess: false,
       teacherAccess: true,
-      studentAccess: false, // Teachers don’t have student access by default
+      studentAccess: true, // Teachers don’t have student access by default
     });
 
     // Save both Teacher and User to the database
