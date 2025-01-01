@@ -12,6 +12,18 @@ const scheduleSchema = new mongoose.Schema({
     min: 1,  // Room numbers should be between 1 and 20
     max: 20
   },
+  class: {
+    type: Number,
+    required: true,
+    enum: [9, 10, 11, 12],  // Allowed classes are 9, 10, 11, and 12
+  },
+  section: {
+    type: String,
+    required: true,
+    enum: ['A', 'B', 'C', 'D'],  // Allowed sections are A, B, C, and D
+  },
+}, {
+  timestamps: true, // Automatically add `createdAt` and `updatedAt` fields
 });
 
 module.exports = mongoose.model('Schedule', scheduleSchema);

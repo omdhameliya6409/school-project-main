@@ -11,41 +11,61 @@ const formatClassAssignment = (schedule) => {
   }));
 };
 
-// Controller function to get formatted schedule (GET)
 const getFormattedSchedule = async (req, res) => {
-  const teacherId = parseInt(req.params.teacherId);
+  const { className, section } = req.query;
+
+  if (!className || !section) {
+    return res.status(400).json({ error: 'Both class and section are required as query parameters' });
+  }
 
   try {
-    // Fetch teacher details from the Teacher model
-    const teacher = await Teacher.findOne({ teacherId });
+    // Fetch schedules matching the class and section
+    const schedules = await Schedule.find({ 
+      class: className, 
+      section: section 
+    });
 
-    if (!teacher) {
-      return res.status(404).json({ error: 'Teacher not found' });
+    if (!schedules || schedules.length === 0) {
+      return res.status(404).json({ error: 'No schedules found for the specified class and section' });
     }
 
-    // Fetch the schedule for this teacher from the Schedule model
-    const schedule = await Schedule.find({ teacherId });
+    // Format the response
+    const formattedSchedules = schedules.map(schedule => ({
+      Class: schedule.class,
+      Section: schedule.section,
+      Subject: schedule.subject,
+      Time: schedule.time,
+      Teacher: schedule.teacherName,
+      RoomNo: `Room ${schedule.room}`
+    }));
 
-    if (!schedule || schedule.length === 0) {
-      return res.status(404).json({ error: 'No schedule found for this teacher' });
-    }
-
-    // Format and return the schedule
-    const formattedSchedule = formatClassAssignment(schedule);
-    return res.json(formattedSchedule);
+    return res.json(formattedSchedules);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
   }
 };
 
+
 // Controller function to add a new schedule (POST)
 const addSchedule = async (req, res) => {
-  const { teacherId, subject, time, teacherName, room } = req.body;
+  const { teacherId, subject, time, teacherName, room, className, section } = req.body;
 
   // Validate room number (1-20)
   if (room < 1 || room > 20) {
     return res.status(400).json({ error: 'Room number must be between 1 and 20' });
+  }
+
+  // Validate class (9, 10, 11, 12)
+  const validClasses = [9, 10, 11, 12];
+  if (!validClasses.includes(className)) {
+    return res.status(400).json({ error: `Class must be one of the following: ${validClasses.join(', ')}` });
+  }
+
+  // Validate section (A, B, C, D)
+  const validSections = ['A', 'B', 'C', 'D'];
+  if (!validSections.includes(section)) {
+    return res.status(400).json({ error: `Section must be one of the following: ${validSections.join(', ')}` });
   }
 
   try {
@@ -63,16 +83,23 @@ const addSchedule = async (req, res) => {
       time,
       teacherName,
       room,
+      class: className,
+      section,
     });
 
     // Save the new schedule to the database
     await newSchedule.save();
 
-    return res.status(201).json({ message: 'Schedule added successfully', schedule: newSchedule });
+    return res.status(201).json({
+      message: 'Schedule added successfully',
+      schedule: newSchedule,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
   }
 };
+
+
 
 module.exports = { getFormattedSchedule, addSchedule };

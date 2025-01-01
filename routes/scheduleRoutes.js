@@ -4,7 +4,7 @@ const { getFormattedSchedule, addSchedule } = require('../controllers/scheduleCo
 const router = express.Router();
 
 // Route to get the teacher's formatted schedule (GET)
-router.get('/show/:teacherId', getFormattedSchedule);
+router.get('/show', getFormattedSchedule);
 
 // Route to add a new schedule (POST)
 router.post('/add', addSchedule);
