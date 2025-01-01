@@ -221,7 +221,7 @@ const getTeacherList = async (req, res) => {
 
     // Validate that at least one filter is provided (class or section)
     if (!teacherClass && !section) {
-      return res.status(400).json({ message: 'Class or section must be provided as query parameters.' });
+      return res.status(400).json({ status:400 , message: 'Class or section must be provided as query parameters.' });
     }
 
     // Build the filter object for the query
@@ -238,17 +238,18 @@ const getTeacherList = async (req, res) => {
 
     // If no teachers found, return a message
     if (teachers.length === 0) {
-      return res.status(404).json({ message: 'No teachers found for the given class and/or section.' });
+      return res.status(404).json({ status:404 , essage: 'No teachers found for the given class and/or section.' });
     }
 
     // Return the list of teachers
     res.status(200).json({
+      status:200 ,
       message: 'Teacher list fetched successfully.',
       teachers,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error.', error: error.message });
+    res.status(500).json({ status:500 ,message: 'Server error.', error: error.message });
   }
 };
 
