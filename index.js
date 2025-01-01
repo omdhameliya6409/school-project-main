@@ -7,7 +7,7 @@ const path = require('path');
 
 const dbconnect = require("./config/db"); // Ensure correct path
 const authRoutes = require("./routes/authRoutes");
-const dashboardRoutes = require('./routes/dashboardRoutes');
+// const dashboardRoutes = require('./routes/dashboardRoutes');
 const principalRoutes = require('./routes/principalRoutes');
 const studentRoutes = require("./routes/studentsRoutes");
 const admissionRoutes = require('./routes/admissionRoutes');
@@ -20,6 +20,7 @@ const feeOverviewRoutes = require('./routes/feeOverviewRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const classTimetableRoutes = require('./routes/classTimetableRoutes');
+const subjectRoutes = require('./routes/subjectRoutes');
 // Create app instance
 const app = express();
 
@@ -64,10 +65,10 @@ app.use('/uploads', express.static(uploadDir));
 
 // Routes
 app.use("/auth", authRoutes); // Authentication Routes
-app.use("/dashboard", dashboardRoutes);
+// app.use("/dashboard", dashboardRoutes);
 app.use("/students", studentRoutes);
 app.use('/admission', admissionRoutes);
-app.use(principalRoutes);
+// app.use(principalRoutes);
 app.use('/', feeRoutes);
 app.use('/', feeOverviewRoutes);
 app.use('/books', bookRoutes); // Book Routes
@@ -77,7 +78,7 @@ app.use("/attendance", attendanceRoutes);
 app.use("/teacher", teacherRoutes);
 app.use("/schedule", scheduleRoutes);
 app.use('/classTimetable', classTimetableRoutes);
-
+app.use('/subjects', subjectRoutes);
 // Test Route
 app.get('/', (req, res) => {
   res.send('Hello, World!');

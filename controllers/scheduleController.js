@@ -15,7 +15,10 @@ const getFormattedSchedule = async (req, res) => {
   const { teacherName } = req.query;  // Extract teacherName from query parameters
 
   if (!teacherName) {
-    return res.status(400).json({ status : 400 ,error: 'Teacher name is required as a query parameter' });
+    return res.status(400).json({
+      status: 400,
+      error: 'Teacher name is required as a query parameter'
+    });
   }
 
   try {
@@ -23,26 +26,38 @@ const getFormattedSchedule = async (req, res) => {
     const schedules = await Schedule.find({ teacherName: teacherName });
 
     if (!schedules || schedules.length === 0) {
-      return res.status(404).json({status : 404 , error: 'No schedules found for the specified teacher' });
+      return res.status(404).json({
+        status: 404,
+        error: 'No schedules found for the specified teacher'
+      });
     }
 
     // Format the response
     const formattedSchedules = schedules.map(schedule => ({
-      Class: schedule.className,  // Assuming className is the field name
+      Class: schedule.className,
       Section: schedule.section,
       Subject: schedule.subject,
       Time: schedule.time,
       Teacher: schedule.teacherName,
       RoomNo: `Room ${schedule.room}`,
-      Day: schedule.day  // Include the day in the response
+      Day: schedule.day
     }));
 
-    return res.json(formattedSchedules);
+    // Send a successful response with status 200
+    return res.status(200).json({
+      status: 200,
+      message: 'Schedules fetched successfully',
+      data: formattedSchedules
+    });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ status : 500 ,error: error.message });
+    return res.status(500).json({
+      status: 500,
+      error: error.message
+    });
   }
 };
+
 
 
 
