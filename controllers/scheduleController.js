@@ -12,60 +12,54 @@ const formatClassAssignment = (schedule) => {
 };
 
 const getFormattedSchedule = async (req, res) => {
-  const { className, section } = req.query;
+  const { teacherName } = req.query;  // Extract teacherName from query parameters
 
-  if (!className || !section) {
-    return res.status(400).json({ error: 'Both class and section are required as query parameters' });
+  if (!teacherName) {
+    return res.status(400).json({ status : 400 ,error: 'Teacher name is required as a query parameter' });
   }
 
   try {
-    // Fetch schedules matching the class and section
-    const schedules = await Schedule.find({ 
-      class: className, 
-      section: section 
-    });
+    // Fetch schedules matching the teacher's name
+    const schedules = await Schedule.find({ teacherName: teacherName });
 
     if (!schedules || schedules.length === 0) {
-      return res.status(404).json({ error: 'No schedules found for the specified class and section' });
+      return res.status(404).json({status : 404 , error: 'No schedules found for the specified teacher' });
     }
 
     // Format the response
     const formattedSchedules = schedules.map(schedule => ({
-      Class: schedule.class,
+      Class: schedule.className,  // Assuming className is the field name
       Section: schedule.section,
       Subject: schedule.subject,
       Time: schedule.time,
       Teacher: schedule.teacherName,
-      RoomNo: `Room ${schedule.room}`
+      RoomNo: `Room ${schedule.room}`,
+      Day: schedule.day  // Include the day in the response
     }));
 
     return res.json(formattedSchedules);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ status : 500 ,error: error.message });
   }
 };
 
 
-// Controller function to add a new schedule (POST)
+
+
+// Function to add a new schedule (POST)
 const addSchedule = async (req, res) => {
-  const { teacherId, subject, time, teacherName, room, className, section } = req.body;
+  const { teacherId, subject, time, teacherName, room, className, section, day } = req.body;
 
   // Validate room number (1-20)
   if (room < 1 || room > 20) {
-    return res.status(400).json({ error: 'Room number must be between 1 and 20' });
+    return res.status(400).json({ status : 400 ,error: 'Room number must be between 1 and 20' });
   }
 
-  // Validate class (9, 10, 11, 12)
-  const validClasses = [9, 10, 11, 12];
-  if (!validClasses.includes(className)) {
-    return res.status(400).json({ error: `Class must be one of the following: ${validClasses.join(', ')}` });
-  }
-
-  // Validate section (A, B, C, D)
-  const validSections = ['A', 'B', 'C', 'D'];
-  if (!validSections.includes(section)) {
-    return res.status(400).json({ error: `Section must be one of the following: ${validSections.join(', ')}` });
+  // Validate day
+  const validDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  if (!validDays.includes(day)) {
+    return res.status(400).json({  status : 400 ,error: `Day must be one of: ${validDays.join(', ')}` });
   }
 
   try {
@@ -73,7 +67,7 @@ const addSchedule = async (req, res) => {
     const teacher = await Teacher.findOne({ teacherId });
 
     if (!teacher) {
-      return res.status(404).json({ error: 'Teacher not found' });
+      return res.status(404).json({  status : 404 ,error: 'Teacher not found' });
     }
 
     // Create a new schedule entry
@@ -83,23 +77,20 @@ const addSchedule = async (req, res) => {
       time,
       teacherName,
       room,
-      class: className,
+      className,  // Use correct field name
       section,
+      day,
     });
 
     // Save the new schedule to the database
     await newSchedule.save();
 
-    return res.status(201).json({
-      message: 'Schedule added successfully',
-      schedule: newSchedule,
-    });
+    return res.status(200).json({ status : 200 ,message: 'Schedule added successfully', schedule: newSchedule });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({  status : 500 ,error: error.message });
   }
 };
 
-
-
 module.exports = { getFormattedSchedule, addSchedule };
+

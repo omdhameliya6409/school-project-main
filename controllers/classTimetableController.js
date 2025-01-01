@@ -18,13 +18,14 @@ const addClassTimetable = async (req, res) => {
 
     // Save the new timetable entry
     await newTimetable.save();
-    return res.status(201).json({
+    return res.status(200).json({
+      status : 200,
       message: 'Class timetable added successfully',
       timetable: newTimetable,
     });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: error.message });
+  } catch (message) {
+    console.message(message);
+    return res.status(500).json({ status:500 ,cmessage: message.message });
   }
 };
 
@@ -34,7 +35,7 @@ const getClassTimetable = async (req, res) => {
 
   // Validate query parameters
   if (!className || !section) {
-    return res.status(400).json({ error: 'Both className and section are required as query parameters.' });
+    return res.status(400).json({ status:400 ,message: 'Both className and section are required as query parameters.' });
   }
 
   try {
@@ -45,13 +46,12 @@ const getClassTimetable = async (req, res) => {
     );
 
     if (!timetable || timetable.length === 0) {
-      return res.status(404).json({ error: 'No timetable found for the specified class and section.' });
+      return res.status(404).json({ status:404 , message: 'No timetable found for the specified class and section.' });
     }
-
-    return res.status(200).json(timetable); // Return the filtered timetable data
-  } catch (error) {
-    console.error('Error fetching timetable:', error);
-    return res.status(500).json({ error: 'Internal server error.' });
+    return res.status(200).json({ status:200 , message: 'Success', timetable: timetable });
+  } catch (message) {
+    console.message('message fetching timetable:', message);
+    return res.status(500).json({ status:500 , message: 'Internal server message.' });
   }
 };
 
