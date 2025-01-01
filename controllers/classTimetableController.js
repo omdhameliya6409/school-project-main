@@ -30,21 +30,22 @@ const addClassTimetable = async (req, res) => {
 
 // Function to get the class timetable for a specific class (e.g., "10")
 const getClassTimetable = async (req, res) => {
-  const { className } = req.params;
-
-  try {
-    // Find the timetable for the specified class
-    const timetable = await ClassTimetable.find({ class: className });
-
-    if (!timetable || timetable.length === 0) {
-      return res.status(404).json({ error: 'No timetable found for this class' });
+    const { className, section } = req.query; // Extract class and section from query parameters
+  
+    try {
+      // Find the timetable for the specified class and section
+      const timetable = await ClassTimetable.find({ class: className, section: section });
+  
+      if (!timetable || timetable.length === 0) {
+        return res.status(404).json({ error: 'No timetable found for this class and section' });
+      }
+  
+      return res.json(timetable);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: error.message });
     }
-
-    return res.json(timetable);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: error.message });
-  }
-};
+  };
+  
 
 module.exports = { addClassTimetable, getClassTimetable };

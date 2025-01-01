@@ -7,6 +7,6 @@ const router = express.Router();
 router.post('/add', addClassTimetable);
 
 // Route to get the class timetable for a specific class (GET)
-router.get('/show/:className', getClassTimetable);
+router.get('/show', getClassTimetable);
 
 module.exports = router;
