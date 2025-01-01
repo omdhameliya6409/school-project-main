@@ -93,7 +93,7 @@
 //     const savedUser = await newUser.save();
 
 //     // Return success response
-//     res.status(201).json({
+//     res.status(200).json({
 //       message: 'Teacher and user account created successfully.',
 //       teacher: savedTeacher,
 //       user: savedUser,

@@ -67,7 +67,7 @@ app.use('/uploads', express.static(uploadDir));
 app.use("/auth", authRoutes); // Authentication Routes
 // app.use("/dashboard", dashboardRoutes);
 app.use("/students", studentRoutes);
-app.use('/admission', admissionRoutes);
+app.use('/admission/student', admissionRoutes);
 // app.use(principalRoutes);
 app.use('/', feeRoutes);
 app.use('/', feeOverviewRoutes);

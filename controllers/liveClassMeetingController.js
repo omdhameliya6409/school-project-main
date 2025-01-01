@@ -6,7 +6,7 @@ exports.createLiveClassMeeting = authMiddleware(['principalAccess', 'teacherAcce
   try {
     const newMeeting = new LiveClassMeeting(req.body);
     const savedMeeting = await newMeeting.save();
-    res.status(201).json({ status: 201, message: "Live Class Meeting created successfully", data: savedMeeting });
+    res.status(200).json({ status: 200, message: "Live Class Meeting created successfully", data: savedMeeting });
   } catch (error) {
     res.status(500).json({ status: 500, message: "Server error", error: error.message });
   }

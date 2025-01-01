@@ -7,7 +7,7 @@ router.post('/add', async (req, res) => {
   try {
     const book = new Book(req.body);
     await book.save();
-    res.status(201).json({ status: 201, message: 'Book added successfully', data: book });
+    res.status(200).json({ status: 200, message: 'Book added successfully', data: book });
   } catch (error) {
     res.status(500).json({ status: 500, message: 'Error adding book', error: error.message });
   }

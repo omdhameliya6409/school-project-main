@@ -36,8 +36,8 @@ exports.addSubject = async (req, res) => {
 
     await newSubject.save();
 
-    res.status(201).json({
-      status: 201,
+    res.status(200).json({
+      status: 200,
       message: 'Subject created successfully',
       data: newSubject,
     });
@@ -145,8 +145,7 @@ exports.editSubject = async (req, res) => {
       const duplicateField = Object.keys(err.keyValue)[0];
       return res.status(409).json({
         status: 409,
-        message: 'Conflict',
-        reason: `A subject with the same ${duplicateField} already exists.`,
+        message: `A subject with the same ${duplicateField} already exists.`,
       });
     }
 

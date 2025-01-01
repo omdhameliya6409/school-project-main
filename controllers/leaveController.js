@@ -106,8 +106,8 @@ exports.applyLeave = async (req, res) => {
       }
     }
 
-    return res.status(201).json({
-      status: 201,
+    return res.status(200).json({
+      status: 200,
       message: "Leave applied successfully.",
       leave
     });

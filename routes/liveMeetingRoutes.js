@@ -32,8 +32,8 @@ router.post("/live-meetings", async (req, res) => {
     });
     const savedMeeting = await liveMeeting.save();
 
-    res.status(201).json({
-      status: 201,
+    res.status(200).json({
+      status: 200,
       message: "Live meeting created successfully",
       data: savedMeeting,
     });

@@ -146,8 +146,8 @@ const router = express.Router();
 //       await newAttendance.save();  // Save the attendance record
 
 //       // Respond with the data
-//       res.status(201).json({
-//         status: 201,
+//       res.status(200).json({
+//         status: 200,
 //         message: 'Admission, student, and attendance added successfully.',
 //         admission: savedAdmission,
 //         student: savedStudent,
@@ -301,8 +301,8 @@ router.post(
       await newAttendance.save();  // Save the attendance record
 
       // Respond with the data
-      res.status(201).json({
-        status: 201,
+      res.status(200).json({
+        status: 200,
         message: 'Admission, student, and attendance added successfully.',
         admission: savedAdmission,
         student: savedStudent,

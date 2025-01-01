@@ -54,8 +54,8 @@ router.post(
       });
 
       await newStudent.save();
-      res.status(201).json({
-        status:201,
+      res.status(200).json({
+        status:200,
         message: "Student added successfully",
         student: newStudent,
       });
@@ -686,8 +686,8 @@ router.post(
       const blockReason = new BlockReason({ name, description });
       await blockReason.save();
 
-      res.status(201).json({
-        status:201,
+      res.status(200).json({
+        status:200,
         message: 'Block reason added successfully.',
         blockReason,
       });
