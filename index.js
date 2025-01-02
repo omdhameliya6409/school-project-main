@@ -21,6 +21,7 @@ const teacherRoutes = require('./routes/teacherRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const classTimetableRoutes = require('./routes/classTimetableRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
+const passwordRoutes = require('./routes/passwordRoutes');
 // Create app instance
 const app = express();
 
@@ -79,6 +80,7 @@ app.use("/teacher", teacherRoutes);
 app.use("/schedule", scheduleRoutes);
 app.use('/classTimetable', classTimetableRoutes);
 app.use('/subjects', subjectRoutes);
+app.use('/password', passwordRoutes);
 // Test Route
 app.get('/', (req, res) => {
   res.send('Hello, World!');
