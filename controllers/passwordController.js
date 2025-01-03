@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+require('dotenv').config();
 
 module.exports = {
   // Forgot Password
@@ -19,31 +20,38 @@ module.exports = {
       const resetToken = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
 
       // Generate a reset link
-      const resetLink = `http://localhost:1000/reset-password/${resetToken}`;
+      const resetLink = `https://school-project-main.onrender.com/password/reset-password/${resetToken}`;
 
       // Configure nodemailer
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-          user: 'omdhameliya0707@gmail.com',
-          pass: 'riuk szch eufx rmpa',
+          user: process.env.EMAIL_USER, 
+          pass: process.env.EMAIL_PASS, 
         },
       });
 
       // Send email
       const mailOptions = {
-        from: 'omdhameliya0707@gmail.com',
+        from: process.env.EMAIL_USER,  // Use environment variable for the sender email
         to: email,
         subject: 'Password Reset Request',
-        html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link is valid for 1 hour.</p>`,
+        html: `
+          <p>Dear User,</p>
+          <p>We received a request to reset your password. To proceed, please click the link below:</p>
+          <p><a href="${resetLink}">Click here to reset your password</a></p>
+          <p>This link is valid for 1 hour. If you did not request a password reset, please ignore this email or contact support immediately.</p>
+          <p>Best regards,</p>
+          <p>The School Management Team</p>
+        `,
       };
 
       await transporter.sendMail(mailOptions);
-      res.status(200).json({ status: 200, message: 'Password reset email sent' });
+      res.status(200).json({ status: 200, message: 'Password reset email sent successfully' });
 
     } catch (err) {
       console.error('Error in forgotPassword:', err);
-      res.status(500).json({ status: 500, message: 'Server error', error: err.message });
+      res.status(500).json({ status: 500, message: 'Server error. Please try again later.', error: err.message });
     }
   },
 
@@ -71,6 +79,9 @@ module.exports = {
 
     } catch (err) {
       console.error('Error in resetPassword:', err);
+      if (err.name === 'TokenExpiredError') {
+        return res.status(400).json({ status: 400, message: 'The password reset link has expired. Please request a new one.' });
+      }
       res.status(500).json({ status: 500, message: 'Invalid or expired token', error: err.message });
     }
   },

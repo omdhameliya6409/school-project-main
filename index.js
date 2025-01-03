@@ -22,6 +22,9 @@ const scheduleRoutes = require('./routes/scheduleRoutes');
 const classTimetableRoutes = require('./routes/classTimetableRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const passwordRoutes = require('./routes/passwordRoutes');
+const homeworkRoutes = require('./routes/homework');
+// const examgroupRoutes = require('./routes/examgroupRoutes');
+const examRoutes = require('./routes/examRoutes');  
 // Create app instance
 const app = express();
 
@@ -81,6 +84,9 @@ app.use("/schedule", scheduleRoutes);
 app.use('/classTimetable', classTimetableRoutes);
 app.use('/subjects', subjectRoutes);
 app.use('/password', passwordRoutes);
+app.use('/homework', homeworkRoutes);
+app.use('/exams', examRoutes);
+// app.use('/examgroup', examgroupRoutes);
 // Test Route
 app.get('/', (req, res) => {
   res.send('Hello, World!');
