@@ -13,6 +13,7 @@ exports.getAttendances = async (req, res, next) => {
 
   if (!section || !className || !attendanceDate) {
     return res.status(400).json({
+      status : 400,
       message: "Missing required parameters: section, class, and attendanceDate are required."
     });
   }

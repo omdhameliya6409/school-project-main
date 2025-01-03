@@ -4,7 +4,7 @@ const User = require('../models/User');
 const Admission = require('../models/Admission');
 const Student = require('../models/Student');
 const Attendance = require('../models/Attendance');
-
+const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // router.post(
@@ -162,7 +162,7 @@ const router = express.Router();
 //   }
 // );
 router.post(
-  '/add', // Route endpoint for adding a new admission
+  '/add', authMiddleware(['principalAccess', 'teacherAccess']),// Route endpoint for adding a new admission
   [
     check('admissionNo').notEmpty().withMessage('Admission No is required'),
     check('class').notEmpty().withMessage('Class is required'),

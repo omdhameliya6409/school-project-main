@@ -176,7 +176,7 @@ exports.deleteSubject = async (req, res) => {
 
     // Validate the ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid subject ID' });
+      return res.status(400).json({ status : 400,message: 'Invalid subject ID' });
     }
 
     // Find and delete the subject by ID
@@ -184,17 +184,19 @@ exports.deleteSubject = async (req, res) => {
 
     // If the subject is not found
     if (!subject) {
-      return res.status(404).json({ message: 'Subject not found' });
+      return res.status(404).json({ status : 404 ,message: 'Subject not found' });
     }
 
     // Successfully deleted the subject, return status 200 with a message
     res.status(200).json({
+      status : 200,
       message: 'Subject deleted successfully',
       data: subject, // Optionally, you can return the deleted subject as part of the response
     });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({
+      status : 500,
       message: 'Server error',
       reason: 'Something went wrong while deleting the subject.',
     });

@@ -19,15 +19,12 @@ router.post('/add', async (req, res) => {
     await book.save();
 
     // Return success response
-    res.status(201).json({ status: 201, message: 'Book added successfully', data: book });
+    res.status(200).json({ status: 200, message: 'Book added successfully', data: book });
   } catch (error) {
     console.error('Error adding book:', error.message);
     res.status(500).json({ status: 500, message: 'Error adding book', error: error.message });
   }
 });
-
-
-
 
 // Get All Books
 router.get('/', async (req, res) => {

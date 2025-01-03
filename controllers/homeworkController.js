@@ -21,8 +21,8 @@ const createHomework = async (req, res) => {
     });
 
     await homework.save();
-    res.status(201).json({
-      status: 201,
+    res.status(200).json({
+      status: 200,
       message: 'Homework created successfully',
       data: homework,
     });
