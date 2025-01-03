@@ -14,7 +14,6 @@ const router = express.Router();
 router.get("/Attendanceslist", getAttendances); 
 router.post("/add", addAttendance);       
 router.put("/:id", updateAttendance);   
-// Route to apply for leave
 router.get("/applyLeave/list", LeavefilterByClassAndSection); 
 router.post('/applyLeave',applyLeave );
 router.put('/leave/edit/:leaveId', editLeave);

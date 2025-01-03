@@ -286,19 +286,19 @@ router.post(
 
       const savedStudent = await newStudent.save();
 
-      // Create and Save the Attendance Document for the newly saved student
+    
       const newAttendance = new Attendance({
-        studentId: savedStudent._id,  // Link the attendance to the saved student
+        studentId: savedStudent._id,  
         admissionNo,
         class: studentClass,
         section: section,
         name: `${firstName} ${lastName}`,
         rollNo,
         attendanceDate: new Date(),
-        attendanceStatus: 'Present',  // Default attendance status to 'Present'
+        attendanceStatus: 'Present', 
       });
 
-      await newAttendance.save();  // Save the attendance record
+      await newAttendance.save(); 
 
       // Respond with the data
       res.status(200).json({
@@ -307,7 +307,7 @@ router.post(
         admission: savedAdmission,
         student: savedStudent,
         user: savedUser,
-        attendance: newAttendance,  // Include attendance in the response
+        attendance: newAttendance, 
       });
 
     } catch (error) {
@@ -316,4 +316,5 @@ router.post(
     }
   }
 );
+
 module.exports = router;
