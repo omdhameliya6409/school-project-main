@@ -7,7 +7,7 @@ const examSchema = new mongoose.Schema({
   dateFrom: { type: Date, required: true },
   startTime: { type: String, required: true },
   duration: { type: String, required: true },
-  roomNumber: { type: String },
+  roomNumber: { type: Number },
   marksMax: { type: Number, required: true },
   marksMin: { type: Number, required: true },
 });

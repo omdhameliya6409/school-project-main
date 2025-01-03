@@ -8,7 +8,7 @@ const FeeSchema = new mongoose.Schema({
   section: { type: String, enum: ['A', 'B', 'C', 'D'], required: true },
   dueDate: { type: Date, required: true },
   status: { type: String, enum: ['Paid', 'Unpaid', 'Partial'], default: 'Unpaid' },
-  // Semester details
+ 
   sem1: {
     amount: { type: Number, required: true },
     paid: { type: Number, default: 0 },

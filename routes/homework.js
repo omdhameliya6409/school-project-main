@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authMiddleware = require('../middleware/authMiddleware');
 const {
   createHomework,
   getHomeworkByFilters,
@@ -8,9 +9,9 @@ const {
 } = require('../controllers/homeworkController');
 
 // Homework routes
-router.post('/add', createHomework); 
-router.get('/list', getHomeworkByFilters); 
-router.put('/edit/:id', updateHomework); 
-router.delete('/delete/:id', deleteHomework); 
+router.post('/add', authMiddleware(['principalAccess', 'teacherAccess']) ,createHomework); 
+router.get('/list', authMiddleware(['principalAccess', 'teacherAccess']) ,getHomeworkByFilters); 
+router.put('/edit/:id', authMiddleware(['principalAccess', 'teacherAccess']) ,updateHomework); 
+router.delete('/delete/:id',authMiddleware(['principalAccess', 'teacherAccess']) , deleteHomework); 
 
 module.exports = router;
