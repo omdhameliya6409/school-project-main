@@ -1,18 +1,16 @@
-// models/Subject.js
-
 const mongoose = require('mongoose');
 
 const SubjectSchema = new mongoose.Schema({
   subject_name: {
     type: String,
     required: [true, 'Subject name is required'],
-    unique: true, // Enforce uniqueness at the database level
+    unique: true, 
     trim: true,
   },
   type: {
     type: String,
     enum: {
-      values: ['Theory', 'Practical'], // Only allow specific values
+      values: ['Theory', 'Practical'], 
       message: 'Type must be either "Theory" or "Practical"',
     },
     required: [true, 'Subject type is required'],
@@ -20,7 +18,7 @@ const SubjectSchema = new mongoose.Schema({
   subject_code: {
     type: String,
     required: [true, 'Subject code is required'],
-    unique: true, // Enforce uniqueness at the database level
+    unique: true, 
     trim: true,
   },
 });

@@ -14,7 +14,7 @@ const admissionSchema = new mongoose.Schema({
   caste: { type: String },
   mobileNumber: { type: String, required: true },
   email: { type: String, unique: true, required: true },
-  password: { type: String, required: true }, // Store password directly
+  password: { type: String, required: true },
   admissionDate: { type: Date, required: true },
   bloodGroup: { type: String },
   house: { type: String },
@@ -26,7 +26,7 @@ const admissionSchema = new mongoose.Schema({
   feeAmount: {
     type: Number,
     required: true,
-    default: 2000, // Default fee amount
+    default: 2000, 
   },
 });
 module.exports = mongoose.model('Admission', admissionSchema);

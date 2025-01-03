@@ -15,7 +15,7 @@ const teacherSchema = new mongoose.Schema({
   dateOfBirth: { type: Date, required: true },
   category: { 
     type: String, 
-    enum: ['General', 'OBC', 'SC', 'ST'], // Only these values are allowed
+    enum: ['General', 'OBC', 'SC', 'ST'], 
     required: true 
   }, // Added category field with enum
 });

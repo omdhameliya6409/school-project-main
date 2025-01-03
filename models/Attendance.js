@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const attendanceSchema = new mongoose.Schema({
   admissionNo: {
-    type: String,
+    type: Number,
     required: true,
   },
   rollNo: {

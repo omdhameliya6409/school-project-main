@@ -21,13 +21,13 @@ const liveMeetingSchema = new mongoose.Schema({
   apiUsed: {
     type: String,
     required: true,
-    enum: ["Global", "Local"], // Allowed values
+    enum: ["Global", "Local"],
   },
   createdBy: {
     type: String,
     required: true,
   },
-}, { timestamps: true }); // Automatically adds createdAt and updatedAt
+}, { timestamps: true }); 
 
 const LiveMeeting = mongoose.model("LiveMeeting", liveMeetingSchema);
 

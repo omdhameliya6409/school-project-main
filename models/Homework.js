@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // Regex for YYYY-MM-DD format
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/; 
 
 const HomeworkSchema = new mongoose.Schema({
   class: { 
