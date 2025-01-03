@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const admissionSchema = new mongoose.Schema({
-  admissionNo: { type: String, required: true, unique: true },
+  admissionNo: { type: Number, required: true, unique: true },
   rollNo: { type: Number },
   class: { type: String, required: true },
   section: { type: String, required: true },
