@@ -191,7 +191,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 const bcrypt = require('bcrypt');
 
-const saltRounds = 10;
+
 
 // Login controller
 exports.login = async (req, res) => {
