@@ -19,5 +19,5 @@ const examSchema = new mongoose.Schema({
 
 // Ensure uniqueness of a combination of fields
 examSchema.index({ examName: 1, dateFrom: 1, startTime: 1, roomNumber: 1 }, { unique: true });
-
-module.exports = mongoose.model('Exam', examSchema);
+const Exam = mongoose.model('Exam', examSchema);
+module.exports = Exam

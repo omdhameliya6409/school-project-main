@@ -1,4 +1,4 @@
-const Exam = require('../models/exam');  // Correct if file name is 'Exam.js'
+const Exam = require('../models/Exam');  // Correct if file name is 'Exam.js'
 
 // Create Exam
 exports.createExam = async (req, res) => {
