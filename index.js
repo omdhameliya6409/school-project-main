@@ -25,7 +25,7 @@ const passwordRoutes = require('./routes/passwordRoutes');
 const homeworkRoutes = require('./routes/homework');
 const subjectMarksReportRoutes = require("./routes/subjectmarksreportRoutes");
 // const examgroupRoutes = require('./routes/examgroupRoutes');
-const examRoutes = require('./routes/examRoutes');  
+
 // Create app instance
 const app = express();
 
@@ -86,7 +86,7 @@ app.use('/classTimetable', classTimetableRoutes);
 app.use('/subjects', subjectRoutes);
 app.use('/password', passwordRoutes);
 app.use('/homework', homeworkRoutes);
-app.use('/examsschedule', examRoutes);
+
 app.use("/subjectmarksreport", subjectMarksReportRoutes);
 // app.use('/examgroup', examgroupRoutes);
 // Test Route
