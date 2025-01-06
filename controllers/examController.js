@@ -52,7 +52,7 @@ exports.createExam = async (req, res) => {
 };
 
 // Get exams with required filtering by examGroup and examName
-exports.getExams = async (req, res) => {
+exports.getExamsbyfilter = async (req, res) => {
   try {
     const { examGroup, examName } = req.query; // Retrieve query parameters
 
@@ -86,6 +86,45 @@ exports.getExams = async (req, res) => {
       status: 200,
       message: 'Exams retrieved successfully',
       exams: exams,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: 'Internal Server Error',
+    });
+  }
+};
+exports.getExams = async (req, res) => {
+  try {
+    // Fetch all exams from the database
+    const exams = await Exam.find(); // No filter applied, fetching all exams
+
+    // If no exams found, return a message
+    if (exams.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: 'No exams found',
+      });
+    }
+
+    // Return the list of all exams
+    const examDetails = exams.map(exam => ({
+      examGroup: exam.examGroup,
+      examName: exam.examName,
+      subject: exam.subject,
+      dateFrom: exam.dateFrom,
+      startTime: exam.startTime,  // Including startTime in the response
+      duration: exam.duration,
+      roomNumber: exam.roomNumber,
+      marksMax: exam.marksMax,
+      marksMin: exam.marksMin,
+      day: exam.day,
+    }));
+
+    res.status(200).json({
+      status: 200,
+      message: 'Exams retrieved successfully',
+      exams: examDetails,
     });
   } catch (error) {
     res.status(500).json({
