@@ -1,5 +1,4 @@
 const Exam = require('../models/Exam'); // Assuming Exam model is in models/Exam.js
-
 exports.createExam = async (req, res) => {
   try {
     const { examName, dateFrom, startTime, roomNumber, day } = req.body;

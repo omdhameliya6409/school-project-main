@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const authMiddleware = require('../middleware/authMiddleware'); // Import the authMiddleware
 const { v4: uuidv4 } = require('uuid'); 
 const Student = require('../models/Student');
-
 // Get fees by class and section (Only principal and teacher can access this)
 exports.getFeesByClassAndSection = [
   authMiddleware(["principalAccess", "teacherAccess"]), // Restrict access to principal and teacher
