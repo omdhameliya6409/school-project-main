@@ -10,14 +10,10 @@ const examSchema = new mongoose.Schema({
   roomNumber: { type: Number },
   marksMax: { type: Number, required: true },
   marksMin: { type: Number, required: true },
-  day: { 
-    type: String, 
-    required: true, 
-    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-  }
+  day: { type: String, required: true, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] },
 });
 
 // Ensure uniqueness of a combination of fields
 examSchema.index({ examName: 1, dateFrom: 1, startTime: 1, roomNumber: 1 }, { unique: true });
 
-module.exports = mongoose.model('Exam', examSchema); // Ensure the model is exported
+module.exports = mongoose.model('Exam', examSchema);
