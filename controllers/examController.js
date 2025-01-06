@@ -106,7 +106,6 @@ exports.getExams = async (req, res) => {
         message: 'No exams found',
       });
     }
-
     // Return the list of all exams
     const examDetails = exams.map(exam => ({
       examGroup: exam.examGroup,
