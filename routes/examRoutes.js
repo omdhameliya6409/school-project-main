@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const examController = require('../controllers/examController');
+const examController = require('../controllers/examController'); // Correct path to the controller
+
 const authMiddleware = require('../middleware/authMiddleware');
 
 // CRUD routes for exams

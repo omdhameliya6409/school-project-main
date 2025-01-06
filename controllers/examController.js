@@ -1,4 +1,5 @@
-const Exam = require('../models/Exam');  // Adjusted to match correct path
+const Exam = require('../models/Exam');  // Make sure the path is correct
+
 
 // Create exam
 exports.createExam = async (req, res) => {
