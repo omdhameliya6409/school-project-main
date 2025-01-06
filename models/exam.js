@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const examSchema = new mongoose.Schema({
   examGroup: { type: String, required: true },
   examName: { type: String, required: true },
