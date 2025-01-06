@@ -105,6 +105,7 @@
 // };
 
 // module.exports = { addTeacher };
+const bcrypt = require('bcrypt');
 const Teacher = require('../models/Teacher');
 const User = require('../models/User'); // Assuming User is the authentication model
 
@@ -129,7 +130,7 @@ const addTeacher = async (req, res) => {
     // Log the incoming request body for debugging
     console.log(req.body);
 
-    // Validate that all required fields are provided and correct type for teacherId
+    // Validate required fields
     if (
       !teacherId ||
       typeof teacherId !== 'number' ||
@@ -146,27 +147,38 @@ const addTeacher = async (req, res) => {
       !dateOfBirth ||
       !category
     ) {
-      return res.status(400).json({ status:400 , message: 'All fields are required, and teacherId must be a number.' });
+      return res
+        .status(400)
+        .json({ status: 400, message: 'All fields are required, and teacherId must be a number.' });
     }
 
     // Validate the format of the date fields (joinDate and dateOfBirth)
     const isValidJoinDate = !isNaN(Date.parse(joinDate));
     const isValidDateOfBirth = !isNaN(Date.parse(dateOfBirth));
     if (!isValidJoinDate || !isValidDateOfBirth) {
-      return res.status(400).json({ status:400 ,message: 'Invalid date format for joinDate or dateOfBirth.' });
+      return res
+        .status(400)
+        .json({ status: 400, message: 'Invalid date format for joinDate or dateOfBirth.' });
     }
 
     // Check if teacherId or email already exists in Teacher model
     const existingTeacher = await Teacher.findOne({ $or: [{ teacherId }, { email }] });
     if (existingTeacher) {
-      return res.status(400).json({ status:400 , message: 'Teacher with this ID or email already exists.' });
+      return res
+        .status(400)
+        .json({ status: 400, message: 'Teacher with this ID or email already exists.' });
     }
 
     // Check if email already exists in User model
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ status:400 , message: 'User with this email already exists.' });
+      return res
+        .status(400)
+        .json({ status: 400, message: 'User with this email already exists.' });
     }
+
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create and save a new teacher with the category
     const newTeacher = new Teacher({
@@ -178,19 +190,19 @@ const addTeacher = async (req, res) => {
       section,
       mobileNumber,
       email,
-      password, // Store password as plain text
+      password: hashedPassword, // Store the hashed password
       joinDate,
       gender,
       dateOfBirth,
-      category,  // Store the category of the teacher
+      category, // Store the category of the teacher
     });
 
     // Create and save a new user for authentication
-    const firstName = name.split(' ')[0]; // Extract first name
-    const lastName = name.split(' ').slice(1).join(' ') || ''; // Extract last name if available
+    const [firstName, ...lastNameArr] = name.split(' '); // Extract first and last name
+    const lastName = lastNameArr.join(' ') || '';
     const newUser = new User({
       email,
-      password, // Store password as plain text
+      password: hashedPassword, // Store the hashed password
       username: `${firstName} ${lastName}`,
       principalAccess: false,
       teacherAccess: true,
@@ -203,16 +215,18 @@ const addTeacher = async (req, res) => {
 
     // Return success response
     res.status(200).json({
-      status:200 ,
+      status: 200,
       message: 'Teacher and user account created successfully.',
       teacher: savedTeacher,
       user: savedUser,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ status:500 ,message: 'Server error.', error: error.message });
+    console.error('Error in addTeacher:', error);
+    res.status(500).json({ status: 500, message: 'Server error.', error: error.message });
   }
 };
+
+
 
 const getTeacherList = async (req, res) => {
   try {

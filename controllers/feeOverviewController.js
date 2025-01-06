@@ -60,12 +60,12 @@ exports.getOverview = async (req, res) => {
     const classWiseAdmissions = await Admission.aggregate([
       {
         $group: {
-          _id: "$class",  // Group by class
-          totalStudents: { $sum: 1 },  // Count the number of students per class
+          _id: "$class",  
+          totalStudents: { $sum: 1 },  
         }
       },
       {
-        $sort: { _id: 1 }  // Sort by class in ascending order (9, 10, 11, 12)
+        $sort: { _id: 1 }  
       }
     ]);
 
@@ -73,12 +73,12 @@ exports.getOverview = async (req, res) => {
     const classSectionWise = await Admission.aggregate([
       {
         $group: {
-          _id: { class: "$class", section: "$section" },  // Group by both class and section
-          totalStudents: { $sum: 1 },  // Count the number of students in each class-section combination
+          _id: { class: "$class", section: "$section" },  
+          totalStudents: { $sum: 1 }, 
         }
       },
       {
-        $sort: { "_id.class": 1, "_id.section": 1 }  // Sort by class and section
+        $sort: { "_id.class": 1, "_id.section": 1 }  
       }
     ]);
 

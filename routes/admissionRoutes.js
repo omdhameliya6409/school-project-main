@@ -162,7 +162,7 @@ const router = express.Router();
 //   }
 // );
 router.post(
-  '/add', authMiddleware(['principalAccess', 'teacherAccess']),// Route endpoint for adding a new admission
+  '/add', authMiddleware(['principalAccess', 'teacherAccess']),
   [
     check('admissionNo').notEmpty().withMessage('Admission No is required'),
     check('class').notEmpty().withMessage('Class is required'),
@@ -181,7 +181,7 @@ router.post(
     check('email').isEmail().withMessage('Invalid email'),
       check('password')
         .notEmpty()
-        .withMessage('Password is required'), // Ensure password is provided
+        .withMessage('Password is required'), 
         check('password').notEmpty().withMessage('Password is required'),
         check('feeAmount')
         .custom(value => value === 2000)
@@ -228,7 +228,7 @@ router.post(
         // Create a new User document for authentication
         const newUser = new User({
           email,
-          password, // In production, ensure the password is hashed
+          password, 
           username: `${firstName} ${lastName}`,
           principalAccess: false,
           teacherAccess: false,
@@ -312,7 +312,7 @@ router.post(
 
     } catch (error) {
       console.error('Error adding admission details:', error);
-      res.status(500).json({ status: 500, message: 'Error adding admission details', error });
+      res.status(400).json({ status: 400, message: 'Error adding admission details', error });
     }
   }
 );

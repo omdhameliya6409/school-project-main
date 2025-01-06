@@ -198,19 +198,16 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Step 1: Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ status: 400, message: 'Invalid email' });
     }
 
-    // Step 2: Validate the provided password using bcrypt
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ status: 400, message: 'Invalid password' });
     }
 
-    // Step 3: Generate JWT token with expiration (1 hour)
     const token = jwt.sign(
       {
         userId: user._id,
@@ -218,31 +215,22 @@ exports.login = async (req, res) => {
         teacherAccess: user.teacherAccess || false,
         studentAccess: user.studentAccess || false,
       },
-      JWT_SECRET, // Secret key for signing the token
-
+      JWT_SECRET,
+      { expiresIn: '1h' }
     );
 
-    // Step 4: Save the token in the database for tracking active sessions
     user.activeToken = token;
     await user.save();
 
-    // Step 5: Return success response with the token
-    let roleMessage = '';
-    let accessKey = {};
+    let roleMessage = user.principalAccess ? 'Principal login successful' : 
+                      user.teacherAccess ? 'Teacher login successful' : 
+                      user.studentAccess ? 'Student login successful' : 'Login successful';
 
-    if (user.principalAccess) {
-      roleMessage = 'Principal login successful';
-      accessKey = { "principalAccess": true };
-    } else if (user.teacherAccess) {
-      roleMessage = 'Teacher login successful';
-      accessKey = { "teacherAccess": true };
-    } else if (user.studentAccess) {
-      roleMessage = 'Student login successful';
-      accessKey = { "studentAccess": true };
-    } else {
-      roleMessage = 'Login successful';
-      accessKey = {};
-    }
+    let accessKey = {
+      principalAccess: user.principalAccess || false,
+      teacherAccess: user.teacherAccess || false,
+      studentAccess: user.studentAccess || false
+    };
 
     res.status(200).json({
       status: 200,
@@ -256,6 +244,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ status: 500, message: 'Server error', error: err.message });
   }
 };
+
 
 // Logout controller
 exports.logout = async (req, res) => {

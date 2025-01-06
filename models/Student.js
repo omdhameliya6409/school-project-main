@@ -8,7 +8,7 @@ const studentSchema = new mongoose.Schema({
   dateOfBirth: { type: Date, required: true },
   gender: { type: String, required: true },
   category: { type: String, enum: ['General', 'OBC', 'SC', 'ST'], required: true },
-  mobileNumber: { type: Number, required: true },
+  mobileNumber: { type: String, required: true },
   isBlocked: { type: Boolean, default: false },
   isMultiClass: Boolean,
   deleted: Boolean,
@@ -17,7 +17,7 @@ const studentSchema = new mongoose.Schema({
   house: { type: String, enum: ['Red', 'Blue', 'Green', 'Yellow'] },
   houseName: { type: String },
   houseDescription: { type: String },
-  feeStatus: { type: String, enum: ['Paid', 'Partial', 'Unpaid'], default: 'Unpaid' }
+  feeStatus: { type: String, enum: ['Paid', 'Partial', 'Unpaid'], default: 'Unpaid'}
 });
 
 module.exports = mongoose.model("Student", studentSchema);
