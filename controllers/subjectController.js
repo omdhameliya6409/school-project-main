@@ -1,8 +1,6 @@
-// controllers/subjectController.js
-
 const mongoose = require('mongoose');
-
 const Subject = require('../models/Subject');
+
 
 exports.addSubject = async (req, res) => {
   try {
@@ -62,9 +60,6 @@ exports.addSubject = async (req, res) => {
     });
   }
 };
-
-
-
 
 exports.editSubject = async (req, res) => {
   try {

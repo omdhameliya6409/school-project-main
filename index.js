@@ -86,7 +86,7 @@ app.use('/classTimetable', classTimetableRoutes);
 app.use('/subjects', subjectRoutes);
 app.use('/password', passwordRoutes);
 app.use('/homework', homeworkRoutes);
-app.use('/exams', examRoutes);
+app.use('/examsschedule', examRoutes);
 app.use("/subjectmarksreport", subjectMarksReportRoutes);
 // app.use('/examgroup', examgroupRoutes);
 // Test Route
