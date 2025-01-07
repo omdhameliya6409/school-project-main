@@ -6,7 +6,7 @@ updatePassword.js
 utils/
 uploads/
 .env
-
+../env
 
 # Logs
 logs
