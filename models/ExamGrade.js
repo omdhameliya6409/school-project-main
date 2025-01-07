@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const examGradeSchema = new mongoose.Schema({
+    examtype: {
+        type: String,
+        required: true,
+    },
     admissionNo: {
         type: String,
         required: true,
@@ -29,8 +33,12 @@ const examGradeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    date: { 
+        type: Date, 
+        required: [true, 'Date is required'] 
+      },
 }, {
-    timestamps: true, // Adds createdAt and updatedAt fields automatically
+    timestamps: true, 
 })
 
 module.exports = mongoose.model('ExamGrade', examGradeSchema);

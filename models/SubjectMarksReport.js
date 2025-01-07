@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const subjectmarksreportSchema = new mongoose.Schema({
+    examtype: {
+        type: String,
+        required: true,
+    },
     admissionNo: { 
         type: Number, 
         required: true, 
