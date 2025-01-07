@@ -132,20 +132,36 @@ exports.deleteSubjectMarksReport = async (req, res) => {
 };
 
 
-// Get all subject marks reports
+// Get all subject marks reports with required filters
 exports.getAllSubjectMarksReports = async (req, res) => {
     try {
-        // Retrieve all reports from the database
-        const reports = await SubjectMarksReport.find();
+        const { class: studentClass, section, examtype } = req.query;
+
+        // Check if all required filters are provided
+        if (!studentClass || !section || !examtype) {
+            return res.status(400).json({
+                message: "Missing required filters: class, section, and examtype are required.",
+            });
+        }
+
+        // Build the filter object with required filters
+        const filter = {
+            class: studentClass,
+            section: section,
+            examtype: examtype
+        };
+
+        // Retrieve filtered reports from the database
+        const reports = await SubjectMarksReport.find(filter);
 
         // If no reports found, return a message
         if (reports.length === 0) {
             return res.status(404).json({
-                message: "No reports found",
+                message: "No reports found for the specified filters",
             });
         }
 
-        // Return all the reports
+        // Return the filtered reports
         res.status(200).json({
             message: "Subject Marks Reports fetched successfully",
             data: reports,
