@@ -1,34 +1,23 @@
 const Exam = require('../models/Exam');  // Correct if file name is 'Exam.js'
-
 // Create Exam
 exports.createExam = async (req, res) => {
   try {
-    const { examName, dateFrom, startTime, roomNumber } = req.body;
+    const { examType, class: className, section, subject, date, startTime, duration, day } = req.body;
 
-    // Check for duplicate exams by dateFrom and roomNumber
-    const duplicateExamByDate = await Exam.findOne({ dateFrom, roomNumber });
-    if (duplicateExamByDate) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Duplicate exam entry detected for the given date and room.',
-        duplicateField: 'dateFrom',
-      });
-    }
-
-    // Check for duplicate exams by examName, dateFrom, and startTime
-    const duplicateExam = await Exam.findOne({ examName, dateFrom, startTime, roomNumber });
+    // Check for duplicate exams by examType, date, and startTime
+    const duplicateExam = await Exam.findOne({ examType, date, startTime });
     if (duplicateExam) {
       return res.status(400).json({
         status: 400,
-        message: 'Duplicate exam entry detected. Please change the provided details.',
-        duplicateFields: { examName, dateFrom, startTime, roomNumber },
+        message: 'Duplicate exam entry detected for the given type, date, and start time.',
       });
     }
 
-    const exam = new Exam(req.body);
+    const exam = new Exam({ examType, class: className, section, subject, date, startTime, duration, day });
     const savedExam = await exam.save();
-    res.status(200).json({
-      status: 200,
+
+    res.status(201).json({
+      status: 201,
       message: 'Exam created successfully',
       exam: savedExam,
     });
@@ -40,44 +29,21 @@ exports.createExam = async (req, res) => {
   }
 };
 
-// Get all exams
-exports.getExams = async (req, res) => {
-  try {
-    const exams = await Exam.find();
 
-    if (exams.length === 0) {
-      return res.status(404).json({
-        status: 404,
-        message: 'No exams found',
-      });
-    }
-
-    res.status(200).json({
-      status: 200,
-      message: 'Exams retrieved successfully',
-      exams: exams,
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 500,
-      message: 'Internal Server Error',
-    });
-  }
-};
 
 // Get exams with filters
-exports.getExamsbyfilter = async (req, res) => {
+exports.getExamsByFilter = async (req, res) => {
   try {
-    const { examGroup, examName } = req.query;
+    const { examType, class: className, section } = req.query;
 
-    if (!examGroup || !examName) {
+    if (!examType || !className || !section) {
       return res.status(400).json({
         status: 400,
-        message: 'Both examGroup and examName are required',
+        message: 'examType, class, and section are required',
       });
     }
 
-    const filter = { examGroup, examName };
+    const filter = { examType, class: className, section };
     const exams = await Exam.find(filter);
 
     if (exams.length === 0) {
@@ -90,7 +56,7 @@ exports.getExamsbyfilter = async (req, res) => {
     res.status(200).json({
       status: 200,
       message: 'Exams retrieved successfully',
-      exams: exams,
+      exams,
     });
   } catch (error) {
     res.status(500).json({
@@ -100,11 +66,12 @@ exports.getExamsbyfilter = async (req, res) => {
   }
 };
 
+
 // Edit Exam
 exports.editExam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { examName, dateFrom, startTime, roomNumber } = req.body;
+    const { examType, date, startTime, subject, duration, day } = req.body;
 
     const exam = await Exam.findById(id);
     if (!exam) {
@@ -116,23 +83,23 @@ exports.editExam = async (req, res) => {
 
     const duplicateExam = await Exam.findOne({
       _id: { $ne: id },
-      examName,
-      dateFrom,
+      examType,
+      date,
       startTime,
-      roomNumber,
     });
     if (duplicateExam) {
       return res.status(400).json({
         status: 400,
-        message: 'Duplicate exam entry detected. Please change the provided details.',
-        duplicateFields: { examName, dateFrom, startTime, roomNumber },
+        message: 'Duplicate exam entry detected for the given type, date, and start time.',
       });
     }
 
-    exam.examName = examName || exam.examName;
-    exam.dateFrom = dateFrom || exam.dateFrom;
+    exam.examType = examType || exam.examType;
+    exam.date = date || exam.date;
     exam.startTime = startTime || exam.startTime;
-    exam.roomNumber = roomNumber || exam.roomNumber;
+    exam.subject = subject || exam.subject;
+    exam.duration = duration || exam.duration;
+    exam.day = day || exam.day;
 
     const updatedExam = await exam.save();
     res.status(200).json({
@@ -174,3 +141,4 @@ exports.deleteExam = async (req, res) => {
     });
   }
 };
+
