@@ -1,8 +1,7 @@
 const SubjectMarksReport = require("../models/SubjectMarksReport"); // Adjust the path
 
-// Create a new subject marks report for a single subject
 exports.createSubjectMarksReport = async (req, res) => {
-    const { admissionNo, name, rollNo, class: studentClass, section, subject, totalmarks, marksobtained, passorfail } = req.body;
+    const { admissionNo, name, rollNo, class: studentClass, section, subject, totalmarks, marksobtained, passorfail, date } = req.body;
 
     try {
         // Check if a report already exists for the given admissionNo and subject
@@ -24,6 +23,7 @@ exports.createSubjectMarksReport = async (req, res) => {
             totalmarks,
             marksobtained,
             passorfail,
+            date,  // Add date to the report
         });
 
         // Save the document to MongoDB
@@ -43,10 +43,10 @@ exports.createSubjectMarksReport = async (req, res) => {
     }
 };
 
-// Edit a subject marks report by ID
+
 exports.editSubjectMarksReport = async (req, res) => {
     const { id } = req.params;  // Get the report ID from the URL parameter
-    const { admissionNo, name, rollNo, class: studentClass, section, subject, totalmarks, marksobtained, passorfail } = req.body;
+    const { admissionNo, name, rollNo, class: studentClass, section, subject, totalmarks, marksobtained, passorfail, date } = req.body;
 
     try {
         // Check if the report already exists with the same admissionNo and subject
@@ -80,6 +80,7 @@ exports.editSubjectMarksReport = async (req, res) => {
         report.totalmarks = totalmarks;
         report.marksobtained = marksobtained;
         report.passorfail = passorfail;
+        report.date = date;  // Update the date field
 
         // Save the updated report to the database
         const updatedReport = await report.save();
@@ -97,6 +98,7 @@ exports.editSubjectMarksReport = async (req, res) => {
         });
     }
 };
+
 
 // Delete a subject marks report by ID
 exports.deleteSubjectMarksReport = async (req, res) => {

@@ -37,6 +37,10 @@ const subjectmarksreportSchema = new mongoose.Schema({
         type: String, 
         required: true 
     },
+    date: { 
+        type: Date, 
+        required: [true, 'Date is required'] 
+      },
     
 }, {
     timestamps: true, // Adds createdAt and updatedAt fields automatically
