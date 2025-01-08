@@ -71,12 +71,31 @@ exports.deleteExamGrade = async (req, res) => {
     }
 };
 
-// Get all exam grades
+// Get all exam grades with required filters
 exports.getAllExamGrades = async (req, res) => {
     try {
-        const examGrades = await ExamGrade.find();
-        res.status(200).json({ status : 200 , data: examGrades });
+        const { class: className, section, examtype, grade } = req.query;
+
+        // Check if all required query parameters are present
+        if (!className || !section || !examtype || !grade) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Missing required query parameters: class, section, examtype, and grade are required.'
+            });
+        }
+
+        // Filter object with correct field names
+        const filter = {
+            class: className,
+            section: section,
+            examtype: examtype,
+            grade: grade
+        };
+
+        const examGrades = await ExamGrade.find(filter);
+        res.status(200).json({ status: 200, data: examGrades });
     } catch (error) {
-        res.status(500).json({ status : 500 , message: 'Error fetching exam grades', error: error.message });
+        res.status(500).json({ status: 500, message: 'Error fetching exam grades', error: error.message });
     }
 };
+
