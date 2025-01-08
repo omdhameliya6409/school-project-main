@@ -25,6 +25,7 @@ const passwordRoutes = require('./routes/passwordRoutes');
 const homeworkRoutes = require('./routes/homework');
 const subjectMarksReportRoutes = require("./routes/subjectmarksreportRoutes");
 const examgradeRoutes = require("./routes/examgradeRoutes");
+const studentprofileRoutes = require('./routes/studentprofileRoutes');
 // const examgroupRoutes = require('./routes/examgroupRoutes');
 const examRoutes = require('./routes/examRoutes'); // Ensure the path is correct
 // Create app instance
@@ -73,6 +74,7 @@ app.use('/uploads', express.static(uploadDir));
 app.use("/auth", authRoutes); // Authentication Routes
 // app.use("/dashboard", dashboardRoutes);
 app.use("/students", studentRoutes);
+app.use("/studentspanel", studentprofileRoutes);
 app.use('/admission/student', admissionRoutes);
 // app.use(principalRoutes);
 app.use('/', feeRoutes);
