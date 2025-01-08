@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const FeeSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
+  admissionNo: { type: Number, required: true },
   feesGroup: { type: String, required: true },
   feesCode: { type: String, required: true },
   class: { type: String, required: true },

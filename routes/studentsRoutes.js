@@ -11,7 +11,7 @@ const Student = require('../models/Student');  // Adjust the path if needed
 const BlockedStudent = require('../models/BlockedStudent');  // Import the BlockedStudent model
 // Add a student (POST) - Principal and Teacher can add students
 const studentController = require('../controllers/studentController');
-router.get('/profile', studentController.getStudentProfileByAdmissionNo);
+router.get('/profile', studentController.getStudentProfile);
 
 router.post(
   "/add",
