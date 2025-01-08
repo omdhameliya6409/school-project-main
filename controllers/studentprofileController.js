@@ -6,7 +6,8 @@ const Fee = require('../models/Fee');
 const Exam = require('../models/Exam');
 const ExamGradeModel = require('../models/ExamGrade');
 const Attendance = require('../models/Attendance');
-
+const ClassTimetable = require('../models/classTimetable');
+const LiveClassMeeting = require('../models/LiveClassMeeting');
 exports.getStudentProfile = async (req, res) => {
   try {
     const { admissionNo } = req.query; // Get admissionNo from query parameters
@@ -289,6 +290,95 @@ exports.getAttendance = async (req, res) => {
     res.status(500).json({ status: 500, message: 'Error fetching attendance details', error: error.message });
   }
 };
+exports.getClassTimetable = async (req, res) => {
+  try {
+    const { admissionNo } = req.query;
+    const token = req.headers['authorization'];
+    if (!token) {
+      return res.status(400).json({ status: 400, message: 'Token is required for authentication.' });
+    }
+
+    const rawToken = token.split(' ')[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(rawToken, JWT_SECRET);
+    } catch (error) {
+      return res.status(403).json({ status: 403, message: 'Token verification failed.' });
+    }
+
+    const studentProfile = await admissions.findOne({ admissionNo });
+    if (!studentProfile) {
+      return res.status(404).json({ status: 404, message: 'Student profile not found.' });
+    }
+
+    if (decoded.email !== studentProfile.email && !decoded.teacherAccess && !decoded.principalAccess) {
+      return res.status(403).json({ status: 403, message: 'Email mismatch with admission number.' });
+    }
+
+    const classtimetables = await ClassTimetable.findOne({
+      class: studentProfile.class,
+      section: studentProfile.section,
+    });
+
+    if (!classtimetables) {
+      return res.status(404).json({ status: 404, message: 'classtimetables details not found.' });
+    }
+
+    res.status(200).json({ status: 200, classtimetables });
+  } catch (error) {
+    console.error('Error fetching classtimetables details:', error.message);
+    res.status(500).json({ status: 500, message: 'Error fetching classtimetables details', error: error.message });
+  }
+};
+exports.LiveClassMeeting = async (req, res) => {
+  try {
+    const { admissionNo } = req.query;
+    const token = req.headers['authorization'];
+    if (!token) {
+      return res.status(400).json({ status: 400, message: 'Token is required for authentication.' });
+    }
+
+    const rawToken = token.split(' ')[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(rawToken, JWT_SECRET);
+    } catch (error) {
+      return res.status(403).json({ status: 403, message: 'Token verification failed.' });
+    }
+
+    const studentProfile = await admissions.findOne({ admissionNo });
+    if (!studentProfile) {
+      return res.status(404).json({ status: 404, message: 'Student profile not found.' });
+    }
+
+    if (decoded.email !== studentProfile.email && !decoded.teacherAccess && !decoded.principalAccess) {
+      return res.status(403).json({ status: 403, message: 'Email mismatch with admission number.' });
+    }
+
+    // Query for LiveClassMeeting based on class and section
+    const LiveClassMeetings = await LiveClassMeeting.findOne({
+      classes: {
+        $elemMatch: {
+          class: studentProfile.class,
+          section: studentProfile.section,
+        },
+      },
+    });
+
+    if (!LiveClassMeetings) {
+      return res.status(404).json({
+        status: 404,
+        message: `No timetable found for class ${studentProfile.class} and section ${studentProfile.section}.`,
+      });
+    }
+
+    res.status(200).json({ status: 200, LiveClassMeetings });
+  } catch (error) {
+    console.error('Error fetching class timetable details:', error.message);
+    res.status(500).json({ status: 500, message: 'Error fetching class timetable details', error: error.message });
+  }
+};
+
 
 
 

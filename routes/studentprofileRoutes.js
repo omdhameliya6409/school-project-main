@@ -8,4 +8,6 @@ router.get('/profile/FeeDetails', studentController.getFeeDetails);
 router.get('/profile/ExamSchedule', studentController.getExamSchedule);
 router.get('/profile/Attendance', studentController.getAttendance);
 router.get('/profile/ExamGrade', studentController.getExamGrade);
+router.get('/profile/ClassTimetable', studentController.getClassTimetable);
+router.get('/profile/LiveClassMeeting', studentController.LiveClassMeeting);
 module.exports = router;

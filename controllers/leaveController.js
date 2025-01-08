@@ -1,21 +1,30 @@
-const Leave = require('../models/Leave'); // Import Leave model
-const Attendance = require('../models/Attendance'); // Import Attendance model
-
-// Helper function to parse "DD-MM-YYYY" into a JavaScript Date object
-function parseDateFromDDMMYYYY(dateStr) {
-  const [day, month, year] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day); // Month is zero-indexed in JavaScript
+const Leave = require('../models/Leave'); 
+// Import Leave model// Helper function to format the date to DD-MM-YYYY format
+function formatDateToDDMMYYYY(date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 
-// Apply for leave API
+// Helper function to parse dates from DD-MM-YYYY format to Date object
+function parseDateFromDDMMYYYY(dateStr) {
+  const [day, month, year] = dateStr.split('-');
+  const date = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+  return date;
+}
+
+
+
+// POST - Apply Leave
 exports.applyLeave = async (req, res) => {
   try {
-    const { name, class: className, section, applyDate, fromDate, toDate, status } = req.body;
+    const { name, class: className, section, applyDate, fromDate, toDate, status, reason, admissionNo } = req.body;
 
-    if (!name || !className || !section || !applyDate || !fromDate || !toDate || !status) {
+    if (!name || !className || !section || !applyDate || !fromDate || !toDate || !status || !reason || !admissionNo) {
       return res.status(400).json({
         status: 400,
-        message: "Missing required fields: name, class, section, applyDate, fromDate, toDate, and status are required."
+        message: "Missing required fields: name, class, section, applyDate, fromDate, toDate, status, reason, and admissionNo are required."
       });
     }
 
@@ -38,78 +47,55 @@ exports.applyLeave = async (req, res) => {
       });
     }
 
-    // Check for existing leave
+    // Check for existing leave record for the same student (admissionNo) with the same date range
     const existingLeave = await Leave.findOne({
-      name,
-      class: className,
-      section,
-      $or: [
-        {
-          fromDate: { $lte: parsedToDate },
-          toDate: { $gte: parsedFromDate }
-        }
-      ]
+      admissionNo,
+      applyDate: parsedApplyDate,
+      fromDate: parsedFromDate,
+      toDate: parsedToDate
     });
 
     if (existingLeave) {
       return res.status(400).json({
         status: 400,
-        message: "Leave already exists for the given period."
+        message: "Leave record with the same dates already exists for this student."
       });
     }
 
     // Create leave record
     const leave = new Leave({
+      admissionNo,
       name,
       class: className,
       section,
       applyDate: parsedApplyDate,
       fromDate: parsedFromDate,
       toDate: parsedToDate,
-      status
+      status,
+      reason
     });
 
     await leave.save();
 
-    // If the leave is approved, mark the student as absent for the period
-    if (status === 'Approved') {
-      const attendanceRecords = [];
-      let currentDate = new Date(parsedFromDate);
-
-      while (currentDate <= parsedToDate) {
-        // Check if attendance already exists for the date
-        const existingAttendance = await Attendance.findOne({
-          name,
-          class: className,
-          section,
-          attendanceDate: {
-            $gte: new Date(currentDate.setHours(0, 0, 0, 0)),
-            $lte: new Date(currentDate.setHours(23, 59, 59, 999))
-          }
-        });
-
-        if (!existingAttendance) {
-          attendanceRecords.push({
-            name,
-            class: className,
-            section,
-            attendanceDate: new Date(currentDate),
-            attendanceStatus: 'Absent'
-          });
-        }
-
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      if (attendanceRecords.length > 0) {
-        await Attendance.insertMany(attendanceRecords);
-      }
-    }
+    // Convert dates to "DD-MM-YYYY" format for response
+    const formattedLeave = {
+      admissionNo: leave.admissionNo, // Show admissionNo first
+      _id: leave._id,
+      name: leave.name,
+      class: leave.class,
+      section: leave.section,
+      applyDate: formatDateToDDMMYYYY(leave.applyDate),
+      fromDate: formatDateToDDMMYYYY(leave.fromDate),
+      toDate: formatDateToDDMMYYYY(leave.toDate),
+      status: leave.status,
+      reason: leave.reason,
+      __v: leave.__v,
+    };
 
     return res.status(200).json({
       status: 200,
       message: "Leave applied successfully.",
-      leave
+      leave: formattedLeave
     });
   } catch (error) {
     console.error("Error applying leave:", error);
@@ -117,6 +103,232 @@ exports.applyLeave = async (req, res) => {
       status: 500,
       message: "An error occurred while applying for leave.",
       error
+    });
+  }
+};
+
+
+
+// PUT - Edit Leave
+exports.editLeave = async (req, res) => {
+  try {
+    const { leaveId } = req.params; // Leave ID from URL params
+    const { name, class: className, section, applyDate, fromDate, toDate, status, reason, admissionNo } = req.body;
+
+    // Check for missing required fields
+    if (!name || !className || !section || !applyDate || !fromDate || !toDate || !status || !reason || !admissionNo) {
+      return res.status(400).json({
+        status: 400,
+        message: "Missing required fields: name, class, section, applyDate, fromDate, toDate, status, reason, and admissionNo are required."
+      });
+    }
+
+    // Parse dates
+    const parsedApplyDate = parseDateFromDDMMYYYY(applyDate);
+    const parsedFromDate = parseDateFromDDMMYYYY(fromDate);
+    const parsedToDate = parseDateFromDDMMYYYY(toDate);
+
+    if (isNaN(parsedApplyDate) || isNaN(parsedFromDate) || isNaN(parsedToDate)) {
+      return res.status(400).json({
+        status: 400,
+        message: "Invalid date format. Use DD-MM-YYYY."
+      });
+    }
+
+    if (parsedFromDate > parsedToDate) {
+      return res.status(400).json({
+        status: 400,
+        message: "'fromDate' cannot be after 'toDate'."
+      });
+    }
+
+    // Find the leave record to update
+    const leave = await Leave.findById(leaveId);
+    if (!leave) {
+      return res.status(404).json({
+        status: 404,
+        message: "Leave record not found."
+      });
+    }
+
+    // Check for existing leave record with the same admissionNo and same dates
+    const existingLeave = await Leave.findOne({
+      admissionNo,
+      applyDate: parsedApplyDate,
+      fromDate: parsedFromDate,
+      toDate: parsedToDate,
+    });
+
+    if (existingLeave && existingLeave._id.toString() !== leaveId) {
+      return res.status(400).json({
+        status: 400,
+        message: "Leave record with the same dates already exists for this student."
+      });
+    }
+
+    // Update the leave record
+    leave.name = name;
+    leave.class = className;
+    leave.section = section;
+    leave.applyDate = parsedApplyDate;
+    leave.fromDate = parsedFromDate;
+    leave.toDate = parsedToDate;
+    leave.status = status;
+    leave.reason = reason;
+
+    // Save the updated leave record
+    await leave.save();
+
+    // Format the dates before sending the response
+    const formattedLeave = {
+      admissionNo: leave.admissionNo, // Show admissionNo first
+      _id: leave._id,
+      name: leave.name,
+      class: leave.class,
+      section: leave.section,
+      applyDate: formatDateToDDMMYYYY(leave.applyDate),
+      fromDate: formatDateToDDMMYYYY(leave.fromDate),
+      toDate: formatDateToDDMMYYYY(leave.toDate),
+      status: leave.status,
+      reason: leave.reason,
+      __v: leave.__v,
+    };
+
+    return res.status(200).json({
+      status: 200,
+      message: "Leave updated successfully.",
+      leave: formattedLeave
+    });
+  } catch (error) {
+    console.error("Error updating leave:", error);
+    return res.status(500).json({
+      status: 500,
+      message: "An error occurred while updating leave.",
+      error: error.message
+    });
+  }
+};
+// DELETE - Delete Leave by ID
+exports.deleteLeave = async (req, res) => {
+  try {
+    const { leaveId } = req.params; // Leave ID from URL params
+
+    // Find the leave record by ID and delete it
+    const leave = await Leave.findByIdAndDelete(leaveId);
+
+    // If leave not found, return an error
+    if (!leave) {
+      return res.status(404).json({
+        status: 404,
+        message: "Leave record not found."
+      });
+    }
+
+    // Return success response
+    return res.status(200).json({
+      status: 200,
+      message: "Leave deleted successfully.",
+      leaveId: leaveId
+    });
+  } catch (error) {
+    console.error("Error deleting leave:", error);
+    return res.status(500).json({
+      status: 500,
+      message: "An error occurred while deleting leave.",
+      error: error.message
+    });
+  }
+};
+// // GET - Filter Leaves by Class and Section
+// exports.filterByClassAndSection = async (req, res) => {
+//   try {
+//     const { className, section } = req.query; // Get class and section from query params
+
+//     // Validate if both class and section are provided
+//     if (!className || !section) {
+//       return res.status(400).json({
+//         status: 400,
+//         message: "Both 'class' and 'section' are required."
+//       });
+//     }
+
+//     // Find leave records based on class and section
+//     const leaves = await Leave.find({ class: className, section: section });
+
+//     // If no records are found, return a message
+//     if (leaves.length === 0) {
+//       return res.status(404).json({
+//         status: 404,
+//         message: "No leave records found for the specified class and section."
+//       });
+//     }
+
+//     // Format the leave records (optional: you can format the dates if needed)
+//     const formattedLeaves = leaves.map(leave => ({
+//       ...leave.toObject(),
+//       applyDate: formatDateToDDMMYYYY(leave.applyDate),
+//       fromDate: formatDateToDDMMYYYY(leave.fromDate),
+//       toDate: formatDateToDDMMYYYY(leave.toDate),
+//     }));
+
+//     // Return the filtered leave records
+//     return res.status(200).json({
+//       status: 200,
+//       message: "Leave records fetched successfully.",
+//       leaves: formattedLeaves
+//     });
+
+//   } catch (error) {
+//     console.error("Error fetching leave records:", error);
+//     return res.status(500).json({
+//       status: 500,
+//       message: "An error occurred while fetching leave records.",
+//       error: error.message
+//     });
+//   }
+// };
+
+exports.LeavefilterByClassAndSection = async (req, res) => {
+  try {
+    const { class: className, section } = req.query; // Rename 'class' to 'className'
+    
+    console.log("Query Parameters:", req.query);  // Log the query parameters
+
+    if (!className || !section) {
+      return res.status(400).json({
+        status: 400,
+        message: "Both 'class' and 'section' are required."
+      });
+    }
+
+    const leaves = await Leave.find({ class: className, section: section });
+
+    if (leaves.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: "No leave records found for the specified class and section."
+      });
+    }
+
+    const formattedLeaves = leaves.map(leave => ({
+      ...leave.toObject(),
+      applyDate: formatDateToDDMMYYYY(leave.applyDate),
+      fromDate: formatDateToDDMMYYYY(leave.fromDate),
+      toDate: formatDateToDDMMYYYY(leave.toDate),
+    }));
+
+    return res.status(200).json({
+      status: 200,
+      message: "Leave records fetched successfully.",
+      leaves: formattedLeaves
+    });
+
+  } catch (error) {
+    console.error("Error fetching leave records:", error);
+    return res.status(500).json({
+      status: 500,
+      message: "An error occurred while fetching leave records.",
+      error: error.message
     });
   }
 };
