@@ -8,6 +8,7 @@ const ExamGradeModel = require('../models/ExamGrade');
 const Attendance = require('../models/Attendance');
 const ClassTimetable = require('../models/classTimetable');
 const LiveClassMeeting = require('../models/LiveClassMeeting');
+const Leave = require('../models/Leave');
 exports.getStudentProfile = async (req, res) => {
   try {
     const { admissionNo } = req.query; // Get admissionNo from query parameters
@@ -368,19 +369,57 @@ exports.LiveClassMeeting = async (req, res) => {
     if (!LiveClassMeetings) {
       return res.status(404).json({
         status: 404,
-        message: `No timetable found for class ${studentProfile.class} and section ${studentProfile.section}.`,
+        message: `No LiveClassMeeting found for class ${studentProfile.class} and section ${studentProfile.section}.`,
       });
     }
 
     res.status(200).json({ status: 200, LiveClassMeetings });
   } catch (error) {
-    console.error('Error fetching class timetable details:', error.message);
-    res.status(500).json({ status: 500, message: 'Error fetching class timetable details', error: error.message });
+    console.error('Error fetching LiveClassMeeting details:', error.message);
+    res.status(500).json({ status: 500, message: 'Error fetching LiveClassMeeting details', error: error.message });
   }
 };
 
+exports.ApplyLeave = async (req, res) => {
+  try {
+    const { admissionNo } = req.query;
+    const token = req.headers['authorization'];
+    if (!token) {
+      return res.status(400).json({ status: 400, message: 'Token is required for authentication.' });
+    }
 
+    const rawToken = token.split(' ')[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(rawToken, JWT_SECRET);
+    } catch (error) {
+      return res.status(403).json({ status: 403, message: 'Token verification failed.' });
+    }
 
+    const studentProfile = await admissions.findOne({ admissionNo });
+    if (!studentProfile) {
+      return res.status(404).json({ status: 404, message: 'Student profile not found.' });
+    }
+
+    if (decoded.email !== studentProfile.email && !decoded.teacherAccess && !decoded.principalAccess) {
+      return res.status(403).json({ status: 403, message: 'Email mismatch with admission number.' });
+    }
+
+    const Leaves = await Leave.find({
+      class: studentProfile.class,
+      section: studentProfile.section,
+    });
+
+    if (!Leaves) {
+      return res.status(404).json({ status: 404, message: 'Leaves details not found.' });
+    }
+
+    res.status(200).json({ status: 200, Leaves });
+  } catch (error) {
+    console.error('Error fetching Leaves details:', error.message);
+    res.status(500).json({ status: 500, message: 'Error fetching Leaves details', error: error.message });
+  }
+};
 
 
 

@@ -10,4 +10,5 @@ router.get('/profile/Attendance', studentController.getAttendance);
 router.get('/profile/ExamGrade', studentController.getExamGrade);
 router.get('/profile/ClassTimetable', studentController.getClassTimetable);
 router.get('/profile/LiveClassMeeting', studentController.LiveClassMeeting);
+router.get('/profile/Leave', studentController.ApplyLeave);
 module.exports = router;
