@@ -6,7 +6,7 @@ const Student = require('../models/Student');
 const Attendance = require('../models/Attendance');
 const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
-
+const bcrypt = require('bcrypt');
 // router.post(
 //   '/add', // Route endpoint for adding a new admission
 //   [
@@ -51,7 +51,7 @@ const router = express.Router();
 //         email,
 //         admissionDate,
 //         bloodGroup,
-//         house,
+//         houseaddressaddressaddressaddress,
 //         height,
 //         weight,
 //         measurementDate,
@@ -101,7 +101,7 @@ const router = express.Router();
 //         password,
 //         admissionDate: new Date(admissionDate),
 //         bloodGroup,
-//         house,
+//         houseaddressaddressaddressaddress,
 //         height,
 //         weight,
 //         measurementDate: measurementDate ? new Date(measurementDate) : null,
@@ -209,7 +209,7 @@ router.post(
         email,
         admissionDate,
         bloodGroup,
-        house,
+        houseaddress,
         height,
         weight,
         measurementDate,
@@ -224,11 +224,13 @@ router.post(
         if (existingAdmission) {
           return res.status(400).json({ status: 400, message: 'Admission No already exists' });
         }
-    
+     // Hash the password
+     const salt = await bcrypt.genSalt(10);
+     const hashedPassword = await bcrypt.hash(password, salt);
         // Create a new User document for authentication
         const newUser = new User({
           email,
-          password, 
+          password:hashedPassword, 
           username: `${firstName} ${lastName}`,
           principalAccess: false,
           teacherAccess: false,
@@ -252,10 +254,10 @@ router.post(
           caste,
           mobileNumber,
           email,
-          password,
+          password:hashedPassword,
           admissionDate: new Date(admissionDate),
           bloodGroup,
-          house,
+          houseaddress,
           height,
           weight,
           measurementDate: measurementDate ? new Date(measurementDate) : null,

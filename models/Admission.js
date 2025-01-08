@@ -17,7 +17,7 @@ const admissionSchema = new mongoose.Schema({
   password: { type: String, required: true },
   admissionDate: { type: Date, required: true },
   bloodGroup: { type: String },
-  house: { type: String },
+  houseaddress: { type: String },
   height: { type: Number },
   weight: { type: Number },
   measurementDate: { type: Date },

@@ -21,7 +21,7 @@ const examGradeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    exam: {
+    subject: {
         type: String,
         required: true
     },

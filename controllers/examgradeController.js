@@ -3,10 +3,10 @@ const ExamGrade = require('../models/ExamGrade');
 // Create a new exam grade
 exports.createExamGrade = async (req, res) => {
     try {
-        const { admissionNo, name, class: studentClass, section, exam, grade, passorfail ,date ,examtype} = req.body;
+        const { admissionNo, name, class: studentClass, section, subject, grade, passorfail ,date ,examtype} = req.body;
 
         // Check for missing fields
-        if (!admissionNo || !name || !studentClass || !section || !exam || !grade || !passorfail || !date || !examtype) {
+        if (!admissionNo || !name || !studentClass || !section || !subject || !grade || !passorfail || !date || !examtype) {
             return res.status(400).json({ status : 400 ,message: 'All fields are required' });
         }
 
@@ -16,7 +16,7 @@ exports.createExamGrade = async (req, res) => {
             name,
             class: studentClass,
             section,
-            exam,
+            subject,
             grade,
             passorfail,
             date,
@@ -34,15 +34,15 @@ exports.createExamGrade = async (req, res) => {
 exports.updateExamGrade = async (req, res) => {
     try {
         const { id } = req.params;
-        const { admissionNo, name, class: studentClass, section, exam, grade, passorfail, date , examtype} = req.body;
+        const { admissionNo, name, class: studentClass, section, subject, grade, passorfail, date , examtype} = req.body;
 
-        if (!admissionNo || !name || !studentClass || !section || !exam || !grade || !passorfail || !date || !examtype) {
+        if (!admissionNo || !name || !studentClass || !section || !subject || !grade || !passorfail || !date || !examtype) {
             return res.status(400).json({status : 400 , message: 'All fields are required' });
         }
 
         const updatedExamGrade = await ExamGrade.findByIdAndUpdate(
             id,
-            { admissionNo, name, class: studentClass, section, exam, grade, passorfail, date ,examtype},
+            { admissionNo, name, class: studentClass, section, subject, grade, passorfail, date ,examtype},
             { new: true, runValidators: true }
         );
 
@@ -98,4 +98,3 @@ exports.getAllExamGrades = async (req, res) => {
         res.status(500).json({ status: 500, message: 'Error fetching exam grades', error: error.message });
     }
 };
-

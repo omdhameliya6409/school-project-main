@@ -211,6 +211,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       {
         userId: user._id,
+        email: user.email, 
         principalAccess: user.principalAccess || false,
         teacherAccess: user.teacherAccess || false,
         studentAccess: user.studentAccess || false,
@@ -222,9 +223,9 @@ exports.login = async (req, res) => {
     user.activeToken = token;
     await user.save();
 
-    let roleMessage = user.principalAccess ? 'Principal login successful' : 
-                      user.teacherAccess ? 'Teacher login successful' : 
-                      user.studentAccess ? 'Student login successful' : 'Login successful';
+    let roleMessage = user.principalAccess ? 'Principal login successful' :
+      user.teacherAccess ? 'Teacher login successful' :
+        user.studentAccess ? 'Student login successful' : 'Login successful';
 
     let accessKey = {
       principalAccess: user.principalAccess || false,
