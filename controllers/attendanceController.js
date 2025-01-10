@@ -24,17 +24,6 @@ exports.getAttendances = async (req, res, next) => {
       class: className
     };
 
-    // Parse the attendanceDate from "DD-MM-YYYY"
-    const parsedDate = parseDateFromDDMMYYYY(attendanceDate);
-    if (isNaN(parsedDate)) {
-      return res.status(400).json({ status: 400, message: "Invalid attendance date format. Use DD-MM-YYYY." });
-    }
-
-    // Filter for the start and end of the day
-    filter.attendanceDate = {
-      $gte: new Date(parsedDate.setHours(0, 0, 0, 0)),
-      $lte: new Date(parsedDate.setHours(23, 59, 59, 999))
-    };
 
     // Query the database
     const attendances = await Attendance.find(filter);
