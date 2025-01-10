@@ -233,10 +233,6 @@ const getTeacherList = async (req, res) => {
     // Destructure class and section from the query parameters
     const { class: teacherClass, section } = req.query;
 
-    // Validate that at least one filter is provided (class or section)
-    if (!teacherClass && !section) {
-      return res.status(400).json({ status:400 , message: 'Class or section must be provided as query parameters.' });
-    }
 
     // Build the filter object for the query
     const filter = {};
