@@ -57,16 +57,11 @@ exports.addAttendance = async (req, res) => {
   try {
     const { admissionNo, rollNo, name, class: className, section, attendanceDate, attendanceStatus } = req.body;
 
-    // Parse the attendanceDate from "DD-MM-YYYY"
-    // const parsedAttendanceDate = parseDateFromDDMMYYYY(attendanceDate);
-    // if (isNaN(parsedAttendanceDate)) {
-    //   return res.status(400).json({ status: 400, message: "Invalid attendance date format. Use DD-MM-YYYY." });
-    // }
 
     // Check for existing attendance on the same date
     const existingAttendance = await Attendance.findOne({
       admissionNo,
-      attendanceDate
+      attendanceDate,
     });
 
     if (existingAttendance) {
@@ -84,14 +79,10 @@ exports.addAttendance = async (req, res) => {
       attendanceStatus
     });
 
-    // await newAttendance.save();
+    await newAttendance.save();
 
-    // return res.status(200).json({ status: 200, message: "Attendance added successfully", attendance: newAttendance });
-        return res.status(200).json({ status: 200, message: "Attendance added successfully", attendance: req.body, newAttendance: newAttendance });
-
-  } 
-  
-  catch (error) {
+    return res.status(200).json({ status: 200, message: "Attendance added successfully", attendance: newAttendance });
+  } catch (error) {
     console.error("Error adding attendance:", error);
     return res.status(500).json({ status: 500, message: "Error adding attendance", error });
   }
