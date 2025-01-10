@@ -212,13 +212,14 @@ exports.login = async (req, res) => {
       {
         userId: user._id,
         email: user.email, 
+        admissionNo: user.admissionNo,  // Correct field for admission number
         principalAccess: user.principalAccess || false,
         teacherAccess: user.teacherAccess || false,
         studentAccess: user.studentAccess || false,
       },
       JWT_SECRET,
-      { expiresIn: '1h' }
     );
+    
 
     user.activeToken = token;
     await user.save();

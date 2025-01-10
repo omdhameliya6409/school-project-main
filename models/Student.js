@@ -17,7 +17,8 @@ const studentSchema = new mongoose.Schema({
   house: { type: String, enum: ['Red', 'Blue', 'Green', 'Yellow'] },
   houseName: { type: String },
   houseDescription: { type: String },
-  feeStatus: { type: String, enum: ['Paid', 'Partial', 'Unpaid'], default: 'Unpaid'}
+  feeStatus: { type: String, enum: ['Paid', 'Partial', 'Unpaid'], default: 'Unpaid'},
+
 });
 
 module.exports = mongoose.model("Student", studentSchema);
