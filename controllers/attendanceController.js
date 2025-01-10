@@ -58,39 +58,39 @@ exports.addAttendance = async (req, res) => {
     const { admissionNo, rollNo, name, class: className, section, attendanceDate, attendanceStatus } = req.body;
 
     // Parse the attendanceDate from "DD-MM-YYYY"
-    // const parsedAttendanceDate = parseDateFromDDMMYYYY(attendanceDate);
-    // if (isNaN(parsedAttendanceDate)) {
-    //   return res.status(400).json({ status: 400, message: "Invalid attendance date format. Use DD-MM-YYYY." });
-    // }
+    const parsedAttendanceDate = parseDateFromDDMMYYYY(attendanceDate);
+    if (isNaN(parsedAttendanceDate)) {
+      return res.status(400).json({ status: 400, message: "Invalid attendance date format. Use DD-MM-YYYY." });
+    }
 
-    // // Check for existing attendance on the same date
-    // const existingAttendance = await Attendance.findOne({
-    //   admissionNo,
-    //   attendanceDate: {
-    //     $gte: new Date(parsedAttendanceDate.setHours(0, 0, 0, 0)),
-    //     $lte: new Date(parsedAttendanceDate.setHours(23, 59, 59, 999))
-    //   }
-    // });
+    // Check for existing attendance on the same date
+    const existingAttendance = await Attendance.findOne({
+      admissionNo,
+      attendanceDate: {
+        $gte: new Date(parsedAttendanceDate.setHours(0, 0, 0, 0)),
+        $lte: new Date(parsedAttendanceDate.setHours(23, 59, 59, 999))
+      }
+    });
 
-    // if (existingAttendance) {
-    //   return res.status(400).json({ status: 400, message: "Attendance for this date already exists." });
-    // }
+    if (existingAttendance) {
+      return res.status(400).json({ status: 400, message: "Attendance for this date already exists." });
+    }
 
-    // // Create a new attendance record
-    // const newAttendance = new Attendance({
-    //   admissionNo,
-    //   rollNo,
-    //   name,
-    //   class: className,
-    //   section,
-    //   attendanceDate: parsedAttendanceDate,
-    //   attendanceStatus
-    // });
+    // Create a new attendance record
+    const newAttendance = new Attendance({
+      admissionNo,
+      rollNo,
+      name,
+      class: className,
+      section,
+      attendanceDate: parsedAttendanceDate,
+      attendanceStatus
+    });
 
     // await newAttendance.save();
 
     // return res.status(200).json({ status: 200, message: "Attendance added successfully", attendance: newAttendance });
-        return res.status(200).json({ status: 200, message: "Attendance added successfully", attendance: req.body });
+        return res.status(200).json({ status: 200, message: "Attendance added successfully", attendance: req.body, newAttendance: newAttendance });
 
   } 
   
