@@ -9,6 +9,7 @@ exports.createAssignment = async (req, res) => {
         const existingAssignment = await AssignmentSchedule.findOne({ class: className, section, Date });
         if (existingAssignment) {
             return res.status(400).json({
+                status : 400,
                 message: 'An assignment for the same class, section, and date already exists. Please choose a different date.',
             });
         }
@@ -24,12 +25,13 @@ exports.createAssignment = async (req, res) => {
         });
 
         const savedAssignment = await newAssignment.save();
-        res.status(201).json({
+        res.status(200).json({
+            status : 200,
             message: 'Assignment created successfully!',
             data: savedAssignment,
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error creating assignment', error: error.message });
+        res.status(500).json({ status : 500,message: 'Error creating assignment', error: error.message });
     }
 };
 
@@ -39,11 +41,12 @@ exports.getAssignments = async (req, res) => {
     try {
         const assignments = await AssignmentSchedule.find({}, 'Date subjectname assignmentname submissiondate');
         res.status(200).json({
+            status : 200,
             message: 'Assignments fetched successfully!',
             data: assignments,
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching assignments', error: error.message });
+        res.status(500).json({status : 500, message: 'Error fetching assignments', error: error.message });
     }
 };
 // Update an existing assignment (PUT)
@@ -56,6 +59,7 @@ exports.updateAssignment = async (req, res) => {
         const existingAssignment = await AssignmentSchedule.findById(id);
         if (!existingAssignment) {
             return res.status(404).json({
+                status : 404,
                 message: 'Assignment not found.',
             });
         }
@@ -71,6 +75,7 @@ exports.updateAssignment = async (req, res) => {
 
             if (duplicate) {
                 return res.status(400).json({
+                    status : 400,
                     message: 'An assignment for the same class, section, and date already exists.',
                 });
             }
@@ -84,11 +89,13 @@ exports.updateAssignment = async (req, res) => {
         );
 
         res.status(200).json({
+            status : 200,
             message: 'Assignment updated successfully!',
             data: updatedAssignment,
         });
     } catch (error) {
         res.status(500).json({
+            status : 500,
             message: 'Error updating assignment.',
             error: error.message,
         });
@@ -103,6 +110,7 @@ exports.deleteAssignment = async (req, res) => {
         const assignment = await AssignmentSchedule.findById(id);
         if (!assignment) {
             return res.status(404).json({
+                status : 404,
                 message: 'Assignment not found.',
             });
         }
@@ -111,10 +119,12 @@ exports.deleteAssignment = async (req, res) => {
         await AssignmentSchedule.findByIdAndDelete(id);
 
         res.status(200).json({
+            status : 200,
             message: 'Assignment deleted successfully!',
         });
     } catch (error) {
         res.status(500).json({
+            status : 500,
             message: 'Error deleting assignment.',
             error: error.message,
         });
