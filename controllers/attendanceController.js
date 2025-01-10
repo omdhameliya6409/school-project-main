@@ -87,7 +87,7 @@ exports.addAttendance = async (req, res) => {
       attendanceStatus
     });
 
-    // await newAttendance.save();
+    await newAttendance.save();
 
     return res.status(200).json({ status: 200, message: "Attendance added successfully", attendance: newAttendance });
   } catch (error) {
