@@ -22,7 +22,7 @@ const scheduleRoutes = require('./routes/scheduleRoutes');
 const classTimetableRoutes = require('./routes/classTimetableRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const passwordRoutes = require('./routes/passwordRoutes');
-const homeworkRoutes = require('./routes/homework');
+const AssignmentRoutes = require('./routes/AssignmentRoutes');
 const subjectMarksReportRoutes = require("./routes/subjectmarksreportRoutes");
 const examgradeRoutes = require("./routes/examgradeRoutes");
 const studentprofileRoutes = require('./routes/studentprofileRoutes');
@@ -89,7 +89,7 @@ app.use("/schedule", scheduleRoutes);
 app.use('/classTimetable', classTimetableRoutes);
 app.use('/subjects', subjectRoutes);
 app.use('/password', passwordRoutes);
-app.use('/homework', homeworkRoutes);
+app.use('/Assignment', AssignmentRoutes);
 // Routes
 app.use('/examsschedule', examRoutes);
 app.use("/subjectmarksreport", subjectMarksReportRoutes);

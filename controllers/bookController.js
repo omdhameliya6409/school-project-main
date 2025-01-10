@@ -8,9 +8,9 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // Add a new book
 exports.addBook = async (req, res) => {
   try {
-    const { title, description, bookNumber, isbnNumber, publisher, author, subject, rackNumber, qty, available, price } = req.body;
+    const { title, description, bookNumber,  author, subject, rackNumber, qty, available, price } = req.body;
 
-    if (!title || !description || !bookNumber || !isbnNumber || !publisher || !author || !subject || !rackNumber || qty === undefined || available === undefined || !price) {
+    if (!title || !description || !bookNumber  || !author || !subject || !rackNumber || qty === undefined || available === undefined || !price) {
       return res.status(400).json({ status: 400, message: 'All fields are required' });
     }
 
