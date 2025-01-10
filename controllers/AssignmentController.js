@@ -52,33 +52,45 @@ const createAssignment = async (req, res) => {
 
 const getAssignmentByFilters = async (req, res) => {
   try {
-    const { class: cls, section, subject } = req.query;
+    const { cls, Section, Subject } = req.query;
 
-    if (!cls || !section || !subject) {
+    if (!cls || !Section || !Subject) {
       return res.status(400).json({ status: 400, error: 'Class, Section, and Subject are required fields' });
     }
 
     const filter = {
       class: cls,
-      section,
-      subject: { $regex: subject, $options: 'i' },
+      section: Section,
+      subject: { $regex: Subject, $options: 'i' },
     };
 
-    const Assignment = await Assignment.find(filter);
+    const assignments = await Assignment.find(filter);
 
-    if (Assignment.length === 0) {
+    if (assignments.length === 0) {
       return res.status(404).json({ status: 404, message: 'No Assignment found for the given filters' });
     }
+
+    // Add teacherId and teacherName to each assignment in the response
+    const teacherId = "T123456"; // Replace with actual logic if needed
+    const teacherName = "John Doe"; // Replace with actual logic if needed
+
+    const enrichedAssignments = assignments.map((assignment) => ({
+      ...assignment._doc, // Spread existing assignment details
+      teacherId,          // Add teacher ID to response
+      teacherName,        // Add teacher Name to response
+    }));
 
     res.status(200).json({
       status: 200,
       message: 'Request successful',
-      data: Assignment,
+      data: enrichedAssignments,
     });
   } catch (err) {
     res.status(500).json({ status: 500, error: err.message });
   }
 };
+
+
 
 
 const updateAssignment = async (req, res) => {
