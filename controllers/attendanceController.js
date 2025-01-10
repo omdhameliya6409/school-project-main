@@ -58,18 +58,15 @@ exports.addAttendance = async (req, res) => {
     const { admissionNo, rollNo, name, class: className, section, attendanceDate, attendanceStatus } = req.body;
 
     // Parse the attendanceDate from "DD-MM-YYYY"
-    const parsedAttendanceDate = parseDateFromDDMMYYYY(attendanceDate);
-    if (isNaN(parsedAttendanceDate)) {
-      return res.status(400).json({ status: 400, message: "Invalid attendance date format. Use DD-MM-YYYY." });
-    }
+    // const parsedAttendanceDate = parseDateFromDDMMYYYY(attendanceDate);
+    // if (isNaN(parsedAttendanceDate)) {
+    //   return res.status(400).json({ status: 400, message: "Invalid attendance date format. Use DD-MM-YYYY." });
+    // }
 
     // Check for existing attendance on the same date
     const existingAttendance = await Attendance.findOne({
       admissionNo,
-      attendanceDate: {
-        $gte: new Date(parsedAttendanceDate.setHours(0, 0, 0, 0)),
-        $lte: new Date(parsedAttendanceDate.setHours(23, 59, 59, 999))
-      }
+      attendanceDate
     });
 
     if (existingAttendance) {
@@ -83,7 +80,7 @@ exports.addAttendance = async (req, res) => {
       name,
       class: className,
       section,
-      attendanceDate: parsedAttendanceDate,
+      attendanceDate,
       attendanceStatus
     });
 
