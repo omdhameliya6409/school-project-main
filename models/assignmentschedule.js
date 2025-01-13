@@ -4,14 +4,12 @@ const AssignmentScheduleSchema = new mongoose.Schema({
   class: { 
     type: String, 
     required: true, 
-    enum: ['9', '10', '11', '12'], // Restrict class to specific values
-    message: 'Class must be one of 9, 10, 11, or 12' 
+    enum: ['9', '10', '11', '12'],
   },
   section: { 
     type: String, 
     required: true, 
-    enum: ['A', 'B', 'C', 'D'], // Restrict section to specific values
-    message: 'Section must be one of A, B, C, or D'
+    enum: ['A', 'B', 'C', 'D'],
   },
   assignmentNote: { 
     type: String, 
@@ -35,9 +33,9 @@ const AssignmentScheduleSchema = new mongoose.Schema({
       message: 'Submission date must be after the assignment date',
     }
   },
-  assignedTeacher: { // Reference to the teacher
+  assignedTeacher: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Teacher', // Assuming 'Teacher' is the teacher's model
+    ref: 'Teacher',
   },
   students: [{
     rollNo: { 
@@ -50,7 +48,7 @@ const AssignmentScheduleSchema = new mongoose.Schema({
     },
     status: { 
       type: String, 
-      enum: ['pending', 'complete', 'rejected'], // Restrict status to specific values
+      enum: ['pending', 'complete', 'rejected'], 
       default: 'pending' 
     },
     marks: { 
@@ -59,15 +57,15 @@ const AssignmentScheduleSchema = new mongoose.Schema({
     },
     gradeNo: { 
       type: String, 
-      enum: ['A', 'B', 'C', 'D', 'F'], // Restrict grade to specific values
+      enum: ['A', 'B', 'C', 'D', 'F'],
       required: function() {
-        return this.status === 'complete';
+        return this.status === 'complete' && this.submission === 'accept';
       }
     },
     reason: { 
       type: String, 
       required: function() {
-        return this.status === 'rejected'; // Reason is required only for rejected status
+        return this.status === 'rejected';
       }
     }
   }]
