@@ -356,25 +356,45 @@ exports.getAssignmentWithTeacher = async (req, res) => {
   
 
 
+
+
   exports.getAssignments = async (req, res) => {
     try {
-      // Fetch all assignments from the assignmentschedules collection
-      const assignments = await AssignmentSchedule.find()
+      const { class: classFilter, section } = req.query; // Extract class and section from query params
+  
+      // Build the query dynamically based on the provided filters
+      const query = {};
+      if (classFilter) query.class = classFilter;
+      if (section) query.section = section;
+  
+      // Fetch assignments based on the query
+      const assignments = await AssignmentSchedule.find(query)
         .populate({
-          path: 'students', // Populate students if it's a referenced field
+          path: 'students', // Populate students if referenced
           select: 'rollNo name status marks', // Choose specific fields to return
         });
   
       // Check if no assignments are found
       if (!assignments || assignments.length === 0) {
-        return res.status(404).json({ status: 404, message: 'No assignments found' });
+        return res.status(404).json({
+          status: 404,
+          message: 'No assignments found for the provided filters',
+        });
       }
   
-      // Respond with all assignments
-      res.status(200).json({ status: 200, message: 'Assignments fetched successfully', assignments });
+      // Respond with the filtered assignments
+      res.status(200).json({
+        status: 200,
+        message: 'Assignments fetched successfully',
+        assignments,
+      });
     } catch (error) {
       console.error('Error fetching assignments:', error.message);
-      res.status(500).json({ status: 500, message: 'Error fetching assignments', error: error.message });
+      res.status(500).json({
+        status: 500,
+        message: 'Error fetching assignments',
+        error: error.message,
+      });
     }
   };
   
