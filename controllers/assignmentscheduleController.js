@@ -212,58 +212,145 @@ exports.deleteAssignment = async (req, res) => {
 //   };
 
 
+// exports.addAssignmentWithStudents = async (req, res) => {
+//     try {
+//         const { assignmentNote, subject, assignmentDate, submissionDate, class: className, section } = req.body;
+
+//         // Extract the token from the Authorization header
+//         const token = req.headers['authorization'];
+//         if (!token) {
+//             return res.status(400).json({ message: 'Token is required for authentication.' });
+//         }
+//         const tokenWithoutBearer = token.split(' ')[1]; // Remove 'Bearer' from token
+
+//         // Decode the token to get user data
+//         let decodedToken;
+//         try {
+//             decodedToken = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET); // Replace with your JWT secret
+//             console.log("Decoded token:", decodedToken); // Log the decoded token
+//         } catch (error) {
+//             console.error("Token verification failed:", error.message); // Log token verification failure
+//             return res.status(403).json({ message: 'Token verification failed.' });
+//         }
+
+//         // Get teacher's ID and email from the decoded token
+//         const teacherIdFromToken = decodedToken.userId;
+//         const emailFromToken = decodedToken.email;
+
+//         // Find the teacher by email
+//         const teacher = await Teacher.findOne({ email: emailFromToken });
+//         if (!teacher) {
+//             return res.status(404).json({ message: 'Teacher not found' });
+//         }
+
+//         // Check if the teacher's subject matches the one in the request
+//         if (teacher.subject !== subject) {
+//             return res.status(403).json({ message: 'You are not authorized to create assignments for this subject.' });
+//         }
+
+//         console.log("Teacher fetched from DB:", teacher); // Log the teacher data from the database
+
+//         // Fetch students based on class and section
+//         const students = await Student.find({ class: className, section });
+//         if (students.length === 0) {
+//             return res.status(404).json({ message: 'No students found for the specified class and section' });
+//         }
+
+//         console.log("Students found:", students); // Log the students found in the database
+
+//         // Create student-specific assignment data
+//         const studentAssignments = students.map(student => ({
+//             rollNo: student.rollNo,
+//             name: student.name,
+//             status: 'pending', // Default status
+//             marks: 0            // Default marks
+//         }));
+
+//         // Create the new assignment
+//         const newAssignment = new AssignmentSchedule({
+//             class: className,
+//             section,
+//             assignmentNote,
+//             subject,
+//             assignmentDate,
+//             submissionDate,
+//             teacherId: teacher._id, // Assign teacher's _id to the teacherId field
+//             teacherName: teacher.name, // Add teacher name for reference
+//             students: studentAssignments // Add students to the assignment
+//         });
+
+//         await newAssignment.save();
+//         console.log("New Assignment created:", newAssignment); // Log the created assignment
+//         res.status(201).json({ message: 'Assignment created successfully', assignment: newAssignment });
+//     } catch (error) {
+//         console.error('Error:', error.message); // Log the error for debugging
+//         res.status(500).json({ error: error.message });
+//     }
+// };
 exports.addAssignmentWithStudents = async (req, res) => {
     try {
-        const { assignmentNote, subject, assignmentDate, submissionDate, class: className, section } = req.body;
+        const { 
+            assignmentNote, 
+            subject, 
+            assignmentDate, 
+            submissionDate, 
+            class: className, 
+            section, 
+            gradeNo, 
+            reason, 
+            status = 'pending', 
+            marks = 0 
+        } = req.body;
 
-        // Extract the token from the Authorization header
+        // Token Validation
         const token = req.headers['authorization'];
         if (!token) {
-            return res.status(400).json({ message: 'Token is required for authentication.' });
+            return res.status(400).json({status:400, message: 'Token is required for authentication.' });
         }
-        const tokenWithoutBearer = token.split(' ')[1]; // Remove 'Bearer' from token
-
-        // Decode the token to get user data
+        const tokenWithoutBearer = token.split(' ')[1]; 
         let decodedToken;
         try {
-            decodedToken = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET); // Replace with your JWT secret
-            console.log("Decoded token:", decodedToken); // Log the decoded token
+            decodedToken = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
         } catch (error) {
-            console.error("Token verification failed:", error.message); // Log token verification failure
-            return res.status(403).json({ message: 'Token verification failed.' });
+            return res.status(403).json({status:400, message: 'Token verification failed.' });
         }
 
-        // Get teacher's ID and email from the decoded token
         const teacherIdFromToken = decodedToken.userId;
         const emailFromToken = decodedToken.email;
 
         // Find the teacher by email
         const teacher = await Teacher.findOne({ email: emailFromToken });
         if (!teacher) {
-            return res.status(404).json({ message: 'Teacher not found' });
+            return res.status(404).json({ status:404 ,message: 'Teacher not found' });
         }
 
-        // Check if the teacher's subject matches the one in the request
         if (teacher.subject !== subject) {
-            return res.status(403).json({ message: 'You are not authorized to create assignments for this subject.' });
+            return res.status(403).json({ status:403 , message: 'You are not authorized to create assignments for this subject.' });
         }
 
-        console.log("Teacher fetched from DB:", teacher); // Log the teacher data from the database
-
-        // Fetch students based on class and section
+        // Fetch students
         const students = await Student.find({ class: className, section });
         if (students.length === 0) {
-            return res.status(404).json({ message: 'No students found for the specified class and section' });
+            return res.status(404).json({ status:404 , message: 'No students found for the specified class and section' });
         }
 
-        console.log("Students found:", students); // Log the students found in the database
+        // Validate status, gradeNo, and reason
+        if (status === 'rejected' && !reason) {
+            return res.status(400).json({ status:400 , message: 'Reason is required when rejecting an assignment.' });
+        }
+
+        if (status === 'complete' && (!marks || !gradeNo)) {
+            return res.status(400).json({ status:400 ,message: 'Marks and gradeNo are required when marking an assignment as complete.' });
+        }
 
         // Create student-specific assignment data
         const studentAssignments = students.map(student => ({
             rollNo: student.rollNo,
             name: student.name,
-            status: 'pending', // Default status
-            marks: 0            // Default marks
+            status, 
+            marks: status === 'complete' ? marks : 0, 
+            gradeNo: status === 'complete' ? gradeNo : undefined,
+            reason: status === 'rejected' ? reason : undefined
         }));
 
         // Create the new assignment
@@ -274,52 +361,113 @@ exports.addAssignmentWithStudents = async (req, res) => {
             subject,
             assignmentDate,
             submissionDate,
-            teacherId: teacher._id, // Assign teacher's _id to the teacherId field
-            teacherName: teacher.name, // Add teacher name for reference
-            students: studentAssignments // Add students to the assignment
+            teacherId: teacher._id,
+            teacherName: teacher.name,
+            students: studentAssignments
         });
 
         await newAssignment.save();
-        console.log("New Assignment created:", newAssignment); // Log the created assignment
         res.status(201).json({ message: 'Assignment created successfully', assignment: newAssignment });
     } catch (error) {
-        console.error('Error:', error.message); // Log the error for debugging
+        console.error('Error:', error.message);
         res.status(500).json({ error: error.message });
     }
 };
 
 
-// Controller to update student status and marks by rollNo
+// // Controller to update student status and marks by rollNo
+// exports.updateAssignmentByRollNo = async (req, res) => {
+//     try {
+//       const { class: className, section, rollNo } = req.params;
+      
+//       const { status, marks } = req.body;
+  
+//       // Find the assignment by class, section, and rollNo
+//       const assignment = await AssignmentSchedule.findOne({ class: className, section, "students.rollNo": rollNo });
+//       if (!assignment) {
+//         return res.status(404).json({ message: 'Assignment not found or student not assigned to this assignment' });
+//       }
+  
+//       // Find the student within the assignment and update status and marks
+//       const student = assignment.students.find(s => s.rollNo === parseInt(rollNo));
+//       if (!student) {
+//         return res.status(404).json({ message: 'Student not found in this assignment' });
+//       }
+  
+//       // Update the student's status and marks
+//       student.status = status || student.status;
+//       student.marks = marks !== undefined ? marks : student.marks;
+  
+//       // Save the updated assignment
+//       await assignment.save();
+  
+//       res.status(200).json({ message: 'Student status and marks updated successfully', assignment });
+//     } catch (error) {
+//       res.status(500).json({ error: error.message });
+//     }
+//   };
+// Controller to update student status, marks, gradeNo, and reason by rollNo
 exports.updateAssignmentByRollNo = async (req, res) => {
     try {
       const { class: className, section, rollNo } = req.params;
-      
-      const { status, marks } = req.body;
+      const { status, marks, gradeNo, reason } = req.body;
   
       // Find the assignment by class, section, and rollNo
-      const assignment = await AssignmentSchedule.findOne({ class: className, section, "students.rollNo": rollNo });
+      const assignment = await AssignmentSchedule.findOne({ 
+        class: className, 
+        section, 
+        "students.rollNo": rollNo 
+      });
+      
       if (!assignment) {
-        return res.status(404).json({ message: 'Assignment not found or student not assigned to this assignment' });
+        return res.status(404).json({ 
+          message: 'Assignment not found or student not assigned to this assignment' 
+        });
       }
   
-      // Find the student within the assignment and update status and marks
+      // Find the student within the assignment
       const student = assignment.students.find(s => s.rollNo === parseInt(rollNo));
       if (!student) {
         return res.status(404).json({ message: 'Student not found in this assignment' });
       }
   
-      // Update the student's status and marks
-      student.status = status || student.status;
-      student.marks = marks !== undefined ? marks : student.marks;
+      // Validate status updates
+      if (status) {
+        student.status = status;
+  
+        if (status === 'complete') {
+          if (!gradeNo) {
+            return res.status(400).json({ message: 'GradeNo is required when status is complete.' });
+          }
+          student.gradeNo = gradeNo; // Update gradeNo
+          student.reason = undefined; // Clear reason if previously set
+        } else if (status === 'rejected') {
+          if (!reason) {
+            return res.status(400).json({ message: 'Reason is required when status is rejected.' });
+          }
+          student.reason = reason; // Update reason
+          student.gradeNo = undefined; // Clear gradeNo if previously set
+          student.marks = 0; // Reset marks to 0 for rejected students
+        }
+      }
+  
+      // Update marks if provided and status is not rejected
+      if (marks !== undefined && student.status !== 'rejected') {
+        student.marks = marks;
+      }
   
       // Save the updated assignment
       await assignment.save();
   
-      res.status(200).json({ message: 'Student status and marks updated successfully', assignment });
+      res.status(200).json({ 
+        message: 'Student status, marks, grade, and reason updated successfully', 
+        assignment 
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   };
+  
   // Controller to get assignment along with teacher's details
 exports.getAssignmentWithTeacher = async (req, res) => {
     try {

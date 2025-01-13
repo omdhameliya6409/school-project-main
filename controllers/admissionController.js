@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const Admission = require('../models/Admission'); // Admission model
+const Admission = require('../models/Admission'); 
 
-// Controller function to generate and download the CSV
+
 const getAdmissionCSV = async (req, res) => {
   try {
     // Fetch all admissions data
@@ -10,7 +10,7 @@ const getAdmissionCSV = async (req, res) => {
       .select(
         'admissionNo rollNo class section firstName lastName gender dateOfBirth category religion caste mobileNumber email admissionDate bloodGroup house height weight measurementDate medicalHistory'
       )
-      .lean(); // Use lean() for performance optimization
+      .lean(); 
 
     if (admissions.length === 0) {
       return res.status(404).json({ message: 'No admissions found' });

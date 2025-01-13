@@ -4,13 +4,14 @@ const AssignmentScheduleSchema = new mongoose.Schema({
   class: { 
     type: String, 
     required: true, 
-    enum: ['9', '10', '11', '12'],
+    enum: ['9', '10', '11', '12'], // Restrict class to specific values
     message: 'Class must be one of 9, 10, 11, or 12' 
   },
   section: { 
     type: String, 
-    enum: ['A', 'B', 'C', 'D'], 
-    required: true 
+    required: true, 
+    enum: ['A', 'B', 'C', 'D'], // Restrict section to specific values
+    message: 'Section must be one of A, B, C, or D'
   },
   assignmentNote: { 
     type: String, 
@@ -34,17 +35,42 @@ const AssignmentScheduleSchema = new mongoose.Schema({
       message: 'Submission date must be after the assignment date',
     }
   },
-  assignedTeacher: { // Added reference to the teacher (User model)
+  assignedTeacher: { // Reference to the teacher
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Teacher', // Assuming 'User' is the teacher's model// This can be optional depending on your use case
+    ref: 'Teacher', // Assuming 'Teacher' is the teacher's model
   },
-  students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }], // Reference to students collection
   students: [{
-    rollNo: { type: Number, required: true },
-    name: { type: String, required: true },
-    status: { type: String, default: 'pending' },
-    marks: { type: Number, default: 0 }
-  }],// Store references to Student ObjectIds here
+    rollNo: { 
+      type: Number, 
+      required: true 
+    },
+    name: { 
+      type: String, 
+      required: true 
+    },
+    status: { 
+      type: String, 
+      enum: ['pending', 'complete', 'rejected'], // Restrict status to specific values
+      default: 'pending' 
+    },
+    marks: { 
+      type: Number, 
+      default: 0 
+    },
+    gradeNo: { 
+      type: String, 
+      enum: ['A', 'B', 'C', 'D', 'F'], // Restrict grade to specific values
+      required: function() {
+        return this.status === 'complete';
+      }
+    },
+    reason: { 
+      type: String, 
+      required: function() {
+        return this.status === 'rejected'; // Reason is required only for rejected status
+      }
+    }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('AssignmentSchedule', AssignmentScheduleSchema);
