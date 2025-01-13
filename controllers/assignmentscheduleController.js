@@ -399,11 +399,47 @@ exports.getAssignmentWithTeacher = async (req, res) => {
   };
   
   
+  exports.getFilteredAssignments = async (req, res) => {
+    try {
+      const { class: classFilter, section } = req.query; // Extract from query parameters
   
-
-
-
-
-
+      // Validate required parameters
+      if (!classFilter || !section) {
+        return res.status(400).json({
+          status: 400,
+          message: 'Class and section are required query parameters.',
+        });
+      }
+  
+      // Query the database for assignments
+      const assignments = await AssignmentSchedule.find({
+        class: classFilter,
+        section: section,
+      }).select('assignmentNote subject assignmentDate submissionDate');
+  
+      // Check if no assignments match the query
+      if (!assignments || assignments.length === 0) {
+        return res.status(404).json({
+          status: 404,
+          message: 'No assignments found for the provided class and section.',
+        });
+      }
+  
+      // Return the filtered assignments
+      res.status(200).json({
+        status: 200,
+        message: 'Assignments fetched successfully.',
+        assignments,
+      });
+    } catch (error) {
+      console.error('Error fetching assignments:', error.message);
+      res.status(500).json({
+        status: 500,
+        message: 'Error fetching assignments.',
+        error: error.message,
+      });
+    }
+  };
+  
 
 
