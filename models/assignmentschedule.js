@@ -58,9 +58,18 @@ const AssignmentScheduleSchema = new mongoose.Schema({
     gradeNo: { 
       type: String, 
       enum: ['A', 'B', 'C', 'D', 'F'],
-      required: function() {
-        return this.status === 'complete' && this.submission === 'accept';
+      validate: {
+        // Grade number is required only if status is 'complete' and submission is 'accept'
+        validator: function(value) {
+          return (this.status === 'complete' && this.submission === 'accept') ? !!value : true;
+        },
+        message: 'GradeNo is required when submission is "accept" and status is "complete".'
       }
+    },
+    submission: {
+      type: String, 
+      enum: ['accept', 'reject'],
+      default: null,
     },
     reason: { 
       type: String, 

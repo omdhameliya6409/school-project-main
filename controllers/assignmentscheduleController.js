@@ -407,32 +407,26 @@ exports.addAssignmentWithStudents = async (req, res) => {
 //       res.status(500).json({ error: error.message });
 //     }
 //   };
-// Controller to update student status, marks, gradeNo, and reason by rollNo
-exports.updateAssignmentByRollNo = async (req, res) => {
+exports.updateAssignmentSubmission = async (req, res) => {
     try {
-        const { class: className, section, rollNo } = req.params;
-        const { status, submission, marks, gradeNo, reason } = req.body;
+        // Extract the 'id' (assignment ID) and 'rollNo' (student's roll number) from URL and query parameters
+        const { id } = req.params;           // Extract ID from the URL
+        const { rollNo } = req.query;        // Extract rollNo from query parameters
+        const { status, submission, marks, gradeNo, reason } = req.body; // Extract other data from the request body
 
-        // Find the assignment by class, section, and rollNo
-        const assignment = await AssignmentSchedule.findOne({
-            class: className,
-            section,
-            "students.rollNo": rollNo
-        });
-
+        // Find the assignment by its ID
+        const assignment = await AssignmentSchedule.findById(id);
         if (!assignment) {
-            return res.status(404).json({
-                message: 'Assignment not found or student not assigned to this assignment'
-            });
+            return res.status(404).json({ message: 'Assignment not found' });
         }
 
-        // Find the student within the assignment
+        // Find the student by rollNo within the assignment
         const student = assignment.students.find(s => s.rollNo === parseInt(rollNo));
         if (!student) {
             return res.status(404).json({ message: 'Student not found in this assignment' });
         }
 
-        // Ensure status is valid
+        // Ensure the status is valid
         const validStatuses = ['pending', 'complete', 'rejected'];
         if (status && !validStatuses.includes(status)) {
             return res.status(400).json({ message: 'Invalid status. It must be "pending", "complete", or "rejected".' });
@@ -440,60 +434,70 @@ exports.updateAssignmentByRollNo = async (req, res) => {
 
         // Handle the status update
         if (status === 'complete') {
-            if (!submission) {
-                return res.status(400).json({ message: 'Submission type (accept or reject) is required when status is complete.' });
-            }
-
             if (submission === 'accept') {
-                // If submission is accept, ask for grade and marks
-                if (!gradeNo || marks === undefined) {
-                    return res.status(400).json({ message: 'GradeNo and Marks are required when submission is accept.' });
+                // Ensure marks and gradeNo are provided for acceptance
+                if (marks === undefined || gradeNo === undefined) {
+                    return res.status(400).json({
+                        message: 'Both marks and gradeNo are required when submission is "accept".'
+                    });
                 }
-                student.gradeNo = gradeNo; // Set gradeNo
-                student.marks = marks;     // Set marks
-                student.reason = undefined; // Clear reason if any
+                student.marks = marks;
+                student.gradeNo = gradeNo;
+                student.reason = undefined; // Clear reason for accepted submission
             } else if (submission === 'reject') {
-                // If submission is reject, ask for reason
                 if (!reason) {
-                    return res.status(400).json({ message: 'Reason is required when submission is reject.' });
+                    return res.status(400).json({
+                        message: 'Reason is required when submission is "reject".'
+                    });
                 }
-                student.reason = reason; // Set reason
-                student.gradeNo = undefined; // Clear gradeNo if any
-                student.marks = 0; // Set marks to 0 if rejected
+                student.reason = reason;
+                student.marks = 0; // Set marks to 0 for rejection
+                student.gradeNo = undefined; // Clear gradeNo for rejected students
             } else {
-                return res.status(400).json({ message: 'Invalid submission type. It must be "accept" or "reject".' });
+                return res.status(400).json({
+                    message: 'Invalid submission type. It must be "accept" or "reject".'
+                });
             }
         } else if (status === 'rejected') {
             // If status is rejected, reason is required
             if (!reason) {
-                return res.status(400).json({ message: 'Reason is required when status is rejected.' });
+                return res.status(400).json({
+                    message: 'Reason is required when status is "rejected".'
+                });
             }
-            student.reason = reason; // Update reason for rejection
+            student.reason = reason;
             student.gradeNo = undefined; // Clear gradeNo
             student.marks = 0; // Reset marks to 0 for rejected students
         }
 
         // Update the student's status and submission
-        student.status = status || student.status; // If no status passed, keep the existing one
+        student.status = status || student.status; // If no status passed, keep existing one
         student.submission = submission || student.submission; // Update submission type
 
         // Save the updated assignment
         await assignment.save();
 
+        // Prepare the response and exclude `reason` if `submission` is "accept"
+        const updatedAssignment = {
+            ...assignment.toObject(),
+            students: assignment.students.map(s => {
+                const studentObj = s.toObject();
+                if (studentObj.submission === 'accept') {
+                    delete studentObj.reason;  // Exclude reason for accepted submissions
+                }
+                return studentObj;
+            })
+        };
+
         res.status(200).json({
             message: 'Student status, marks, grade, reason, and submission updated successfully',
-            assignment: {
-                ...assignment.toObject(), // Convert assignment to a plain object
-                students: assignment.students.map(s => ({
-                    ...s.toObject(), // Convert student to a plain object
-                    submission: s.submission || null, // Ensure submission is included
-                }))
-            }
+            assignment: updatedAssignment
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
   
   

@@ -13,7 +13,7 @@ router.get('/submission', assignmentController.getAssignments);
 router.get('/assignments/filter/grade',assignmentController.filterAssignmentsByGrade);
 // Route to update an assignment
 router.put('/edit/:id', assignmentController.updateAssignment);
-router.put('/submission/edit/:class/:section/:rollNo', assignmentController.updateAssignmentByRollNo);
+router.put('/submission/:id', assignmentController.updateAssignmentSubmission);
 
 // Route to delete an assignment
 router.delete('/delete/:id', assignmentController.deleteAssignment);
