@@ -2,6 +2,7 @@ const AssignmentSchedule = require('../models/assignmentschedule');
 const Student = require('../models/Student');
 const jwt = require('jsonwebtoken');
 const Teacher = require('../models/Teacher');
+const assignmentschedule = require('../models/assignmentschedule');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 
@@ -616,5 +617,63 @@ exports.getAssignmentWithTeacher = async (req, res) => {
       });
     }
   };
-  
 
+
+
+  // Controller method to filter assignments by grade
+  exports.filterAssignmentsByGrade = async (req, res) => {
+      try {
+          const { class: className, section, gradeNo } = req.query;
+  
+          // Check if all required query parameters are present
+          if (!className || !section || !gradeNo) {
+              return res.status(400).json({
+                  status: 400,
+                  message: 'Missing required query parameters: class, section, and gradeNo are required.'
+              });
+          }
+  
+          // Query to find assignments that match class, section, and students' gradeNo
+          const assignments = await AssignmentSchedule.find({
+              class: className,
+              section: section,
+              'students.gradeNo': gradeNo // This filters for students who have the specified gradeNo
+          });
+  
+          // Filter students in the found assignments to include only those with the specified gradeNo
+          assignments.forEach(assignment => {
+              assignment.students = assignment.students
+                  .filter(student => student.gradeNo === gradeNo) // Keep only students with the requested gradeNo
+                  .map(student => ({ gradeNo: student.gradeNo })); // Only return gradeNo
+          });
+  
+          // Filter out assignments that don't have any students with the requested gradeNo
+          const filteredAssignments = assignments.filter(assignment => assignment.students.length > 0);
+  
+          // If no assignments are found, send a not found response
+          if (filteredAssignments.length === 0) {
+              return res.status(404).json({
+                  status: 404,
+                  message: 'No assignments found for the provided filters.'
+              });
+          }
+  
+          // Return the filtered assignments
+          return res.status(200).json({
+              status: 200,
+              message: 'Filtered assignments fetched successfully.',
+              assignments: filteredAssignments
+          });
+  
+      } catch (error) {
+          return res.status(500).json({
+              status: 500,
+              message: 'Error fetching assignments',
+              error: error.message
+          });
+      }
+  };
+  
+  
+  
+  

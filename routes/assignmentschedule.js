@@ -9,7 +9,8 @@ router.post('/create', assignmentController.addAssignmentWithStudents);
 router.get('/list', assignmentController.getAssignments);
 router.get('/assignments/:class/:section', assignmentController.getAssignments);
 router.get('/assignmentschedule/assignment/:class/:section', assignmentController.getAssignmentWithTeacher);
-router.get('/assignmentss', assignmentController.getFilteredAssignments);
+router.get('/submission', assignmentController.getAssignments);
+router.get('/assignments/filter/grade',assignmentController.filterAssignmentsByGrade);
 // Route to update an assignment
 router.put('/edit/:id', assignmentController.updateAssignment);
 router.put('/submission/edit/:class/:section/:rollNo', assignmentController.updateAssignmentByRollNo);
