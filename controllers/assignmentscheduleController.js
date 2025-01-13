@@ -354,24 +354,30 @@ exports.getAssignmentWithTeacher = async (req, res) => {
   
   
   
-exports.getAssignments = async (req, res) => {
+
+
+  exports.getAssignments = async (req, res) => {
     try {
+      // Fetch all assignments from the assignmentschedules collection
       const assignments = await AssignmentSchedule.find()
         .populate({
-          path: 'students', // Populate the students field
-          select: 'rollNo name status marks' // Choose the fields to return
+          path: 'students', // Populate students if it's a referenced field
+          select: 'rollNo name status marks', // Choose specific fields to return
         });
   
-      if (assignments.length === 0) {
-        return res.status(404).json({ message: 'No assignments found' });
+      // Check if no assignments are found
+      if (!assignments || assignments.length === 0) {
+        return res.status(404).json({ status: 404, message: 'No assignments found' });
       }
   
-      res.status(200).json({ assignments });
+      // Respond with all assignments
+      res.status(200).json({ status: 200, message: 'Assignments fetched successfully', assignments });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error fetching assignments' });
+      console.error('Error fetching assignments:', error.message);
+      res.status(500).json({ status: 500, message: 'Error fetching assignments', error: error.message });
     }
   };
+  
   
   
 

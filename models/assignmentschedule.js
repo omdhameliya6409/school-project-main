@@ -38,6 +38,7 @@ const AssignmentScheduleSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Teacher', // Assuming 'User' is the teacher's model// This can be optional depending on your use case
   },
+  students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }], // Reference to students collection
   students: [{
     rollNo: { type: Number, required: true },
     name: { type: String, required: true },
