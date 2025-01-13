@@ -97,6 +97,7 @@ app.use("/subjectmarksreport", subjectMarksReportRoutes);
 app.use("/examgrade", examgradeRoutes);
 app.use("/leave", leaveRoutes);
 app.use('/assignmentschedule', assignmentschedule);
+
 // app.use('/examgroup', examgroupRoutes);
 // Test Route
 app.get('/', (req, res) => {

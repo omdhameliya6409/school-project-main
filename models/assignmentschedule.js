@@ -1,36 +1,49 @@
 const mongoose = require('mongoose');
 
-const assignmentschema = new mongoose.Schema({
-    class: {
-        type: String,
-        required: true
-    },
-    section: {
-        type: String,
-        required: true
-    },
-    Date: {
-        type: Date,
-        required: true
-    },
-    subjectname: {
-        type: String,
-        required: true
-    },
-    assignmentname: {
-        type: String,
-        required: true
-    },
-    submissiondate: {
-        type: Date,
-        required: true
-    },
-},
-    {
-        timestamps: true,
+const AssignmentScheduleSchema = new mongoose.Schema({
+  class: { 
+    type: String, 
+    required: true, 
+    enum: ['9', '10', '11', '12'],
+    message: 'Class must be one of 9, 10, 11, or 12' 
+  },
+  section: { 
+    type: String, 
+    enum: ['A', 'B', 'C', 'D'], 
+    required: true 
+  },
+  assignmentNote: { 
+    type: String, 
+    required: true 
+  },
+  subject: { 
+    type: String, 
+    required: true 
+  },
+  assignmentDate: { 
+    type: Date, 
+    required: true 
+  },
+  submissionDate: { 
+    type: Date, 
+    required: true,
+    validate: {
+      validator: function(value) {
+        return value > this.assignmentDate;
+      },
+      message: 'Submission date must be after the assignment date',
     }
-);
+  },
+  assignedTeacher: { // Added reference to the teacher (User model)
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Teacher', // Assuming 'User' is the teacher's model// This can be optional depending on your use case
+  },
+  students: [{
+    rollNo: { type: Number, required: true },
+    name: { type: String, required: true },
+    status: { type: String, default: 'pending' },
+    marks: { type: Number, default: 0 }
+  }],// Store references to Student ObjectIds here
+}, { timestamps: true });
 
-// Create a unique index for `class`, `section`, and `Date`
-assignmentschema.index({ class: 1, section: 1, Date: 1 }, { unique: true });
-module.exports = mongoose.model('AssignmentSchedule', assignmentschema);
+module.exports = mongoose.model('AssignmentSchedule', AssignmentScheduleSchema);

@@ -11,6 +11,9 @@ const LiveClassMeeting = require('../models/LiveClassMeeting');
 const Leave = require('../models/Leave');
 const StudentBook = require('../models/StudentBook');
 const Book = require('../models/book');
+const assignmentschedule = require('../models/assignmentschedule');
+const Teacher = require('../models/Teacher');
+
 exports.getStudentProfile = async (req, res) => {
   try {
     const { admissionNo } = req.query; // Get admissionNo from query parameters
@@ -743,3 +746,95 @@ exports.editBorrowedBook = async (req, res) => {
     res.status(500).json({ status: 500, message: 'Error editing the borrowed book.', error: error.message });
   }
 };
+
+
+exports.Getassignmentschedules = async (req, res) => {
+  try {
+    const { rollNo } = req.query;
+    const token = req.headers['authorization'];
+    if (!token) {
+      return res.status(400).json({ status: 400, message: 'Token is required for authentication.' });
+    }
+
+    const rawToken = token.split(' ')[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(rawToken, JWT_SECRET);
+    } catch (error) {
+      return res.status(403).json({ status: 403, message: 'Token verification failed.' });
+    }
+
+    const studentProfile = await admissions.findOne({ rollNo });
+    if (!studentProfile) {
+      return res.status(404).json({ status: 404, message: 'Student profile not found.' });
+    }
+
+    if (decoded.email !== studentProfile.email && !decoded.teacherAccess && !decoded.principalAccess) {
+      return res.status(403).json({ status: 403, message: 'Email mismatch with admission number.' });
+    }
+
+    const assignmentsToUpdate = await assignmentschedule.find({
+      class: studentProfile.class,
+      section: studentProfile.section,
+      status: { $regex: '^pending$', $options: 'i' }  // Case-insensitive match for 'pending'
+    });
+
+    if (!assignmentsToUpdate) {
+      return res.status(404).json({ status: 404, message: 'Assignmentschedule not found.' });
+    }
+
+    // Map through assignments and fetch teacherName
+    const assignmentsWithTeacherName = await Promise.all(assignmentsToUpdate.map(async (schedule) => {
+      const teacher = await Teacher.findById(schedule.teacherId);
+      return {
+        Date: schedule.Date,
+        subjectname: schedule.subjectname,
+        assignmentname: schedule.assignmentname,
+        submissiondate: schedule.submissiondate,
+        status: schedule.status,
+        mark: schedule.mark,
+        teacherName: teacher ? teacher.name : 'Unknown',  // Assuming teacher has a 'name' field
+      };
+    }));
+
+    res.status(200).json({ status: 200, assignmentsWithTeacherName });
+  } catch (error) {
+    console.error('Error fetching assignmentschedule:', error.message);
+    res.status(500).json({ status: 500, message: 'Error fetching assignmentschedule', error: error.message });
+  }
+};
+
+// Update Assignment Schedule Function
+exports.UpdateAssignmentSchedules = async (req, res) => {
+  try {
+    const { rollNo } = req.query;
+    const { status, marks, submissiondate } = req.body;
+
+    const assignmentsToUpdate = await AssignmentSchedule.find({
+      class: '12', // Example
+      section: 'C', // Example
+    }).populate('teacherId'); // Populate teacher info
+
+    if (assignmentsToUpdate.length === 0) {
+      return res.status(404).json({ status: 404, message: 'No assignments found.' });
+    }
+
+    const updatedAssignments = assignmentsToUpdate.map((assignment) => {
+      if (status) assignment.status = status;
+      if (marks !== undefined) assignment.mark = marks;
+      if (submissiondate) assignment.submissiondate = submissiondate;
+
+      return {
+        ...assignment.toObject(),
+        teacherName: assignment.teacherId ? assignment.teacherId.teacherName : 'Unknown',
+      };
+    });
+
+    res.status(200).json({ status: 200, message: 'Assignments updated successfully.', updatedAssignments });
+  } catch (error) {
+    res.status(500).json({ status: 500, message: 'Error updating assignment schedules', error: error.message });
+  }
+};
+
+
+
