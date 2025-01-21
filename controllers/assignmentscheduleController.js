@@ -603,13 +603,22 @@ exports.getAssignmentWithTeacher = async (req, res) => {
 
 
 
-  exports.getAssignments = async (req, res) => {
+exports.getAssignments = async (req, res) => {
     try {
       const { class: classFilter, section } = req.query;
-
-      const query = {};
-      if (classFilter) query.class = classFilter;
-      if (section) query.section = section;
+  
+      // Validate required query parameters
+      if (!classFilter || !section) {
+        return res.status(400).json({
+          status: 400,
+          message: 'Both class and section are required query parameters.',
+        });
+      }
+  
+      const query = {
+        class: classFilter,
+        section: section,
+      };
   
       // Fetch assignments based on the query
       const assignments = await AssignmentSchedule.find(query)
@@ -622,25 +631,26 @@ exports.getAssignmentWithTeacher = async (req, res) => {
       if (!assignments || assignments.length === 0) {
         return res.status(404).json({
           status: 404,
-          message: 'No assignments found for the provided filters',
+          message: 'No assignments found for the provided filters.',
         });
       }
   
       // Respond with the filtered assignments
       res.status(200).json({
         status: 200,
-        message: 'Assignments fetched successfully',
+        message: 'Assignments fetched successfully.',
         assignments,
       });
     } catch (error) {
       console.error('Error fetching assignments:', error.message);
       res.status(500).json({
         status: 500,
-        message: 'Error fetching assignments',
+        message: 'Error fetching assignments.',
         error: error.message,
       });
     }
   };
+  
   
   exports.getFilteredAssignments = async (req, res) => {
     try {
