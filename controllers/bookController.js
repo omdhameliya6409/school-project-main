@@ -1,11 +1,11 @@
-const Book = require('../models/book'); // Import the Book model
+const Book = require('../models/book'); 
 const jwt = require("jsonwebtoken");
 const Student = require("../models/Student");
 const admissions = require('../models/Admission');
 const StudentBook = require('../models/StudentBook');
 const mongoose = require('mongoose');
 const JWT_SECRET = process.env.JWT_SECRET;
-// Add a new book
+
 exports.addBook = async (req, res) => {
   try {
     const { title, description, bookNumber,  author, subject, rackNumber, qty, available, price } = req.body;
@@ -24,7 +24,7 @@ exports.addBook = async (req, res) => {
   }
 };
 
-// Get all books
+
 exports.getAllBooks = async (req, res) => {
   try {
     const books = await Book.find();
@@ -34,7 +34,6 @@ exports.getAllBooks = async (req, res) => {
   }
 };
 
-// Edit a book by id
 exports.editBook = async (req, res) => {
   try {
     const { id } = req.params;
@@ -66,7 +65,7 @@ exports.editBook = async (req, res) => {
   }
 };
 
-// Delete a book by id
+
 exports.deleteBook = async (req, res) => {
   try {
     const { id } = req.params;
@@ -87,10 +86,10 @@ exports.deleteBook = async (req, res) => {
 
 
 
-// Get all books
+
 exports.getAllBooks = async (req, res) => {
   try {
-    const books = await Book.find();  // Fetch all books from the Book model
+    const books = await Book.find(); 
     res.status(200).json({
       status: 200,
        message: "Books fetched successfully.",
@@ -98,30 +97,29 @@ exports.getAllBooks = async (req, res) => {
      
     });
   } catch (error) {
-    console.error(error);  // Log the error for debugging
+    console.error(error); 
     res.status(500).json({ message: "Error fetching books." });
   }
 };
 
 exports.getAllStudentBooks = async (req, res) => {
   try {
-    const studentBooks = await StudentBook.find();  // Fetch all student-book records
+    const studentBooks = await StudentBook.find();  
     
     res.status(200).json({
       message: "Books fetched successfully.",
-      studentBooks  // Corrected the variable name to match the one you fetched
+      studentBooks  
     });
   } catch (error) {
-    console.error(error);  // Log the error for debugging
+    console.error(error); 
     res.status(500).json({ message: "Error fetching student books." });
   }
 };
 
 
-// Return a book
 exports.returnBook = async (req, res) => {
   try {
-    const student = await Student.findById(req.body.studentId); // Assuming studentId is passed in the body
+    const student = await Student.findById(req.body.studentId); 
     const book = await Book.findById(req.params.bookId);
 
     const borrowedBook = student.borrowedBooks.find(b => b.bookId.toString() === book._id.toString() && b.status === "borrowed");

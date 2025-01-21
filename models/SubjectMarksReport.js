@@ -47,7 +47,7 @@ const subjectmarksreportSchema = new mongoose.Schema({
       },
     
 }, {
-    timestamps: true, // Adds createdAt and updatedAt fields automatically
+    timestamps: true,
 });
 
 module.exports = mongoose.model("SubjectMarksReport", subjectmarksreportSchema);

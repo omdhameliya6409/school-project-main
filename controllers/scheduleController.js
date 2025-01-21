@@ -1,7 +1,7 @@
 const Teacher = require('../models/Teacher');
 const Schedule = require('../models/schedule');
 
-// Function to format the class assignment
+
 const formatClassAssignment = (schedule) => {
   return schedule.map((item) => ({
     Subject: item.subject,  // Only subject name without teacher ID

@@ -1,10 +1,9 @@
-const SubjectMarksReport = require("../models/SubjectMarksReport"); // Adjust the path
+const SubjectMarksReport = require("../models/SubjectMarksReport"); 
 
 exports.createSubjectMarksReport = async (req, res) => {
     const { admissionNo, name, rollNo, class: studentClass, section, subject, totalmarks, marksobtained, passorfail, date ,examtype} = req.body;
 
     try {
-        // Check if a report already exists for the given admissionNo and subject
         const existingReport = await SubjectMarksReport.findOne({ admissionNo, subject });
         if (existingReport) {
             return res.status(400).json({
@@ -12,7 +11,7 @@ exports.createSubjectMarksReport = async (req, res) => {
             });
         }
 
-        // Create a new subject marks report
+
         const report = new SubjectMarksReport({
             admissionNo,
             name,
@@ -27,10 +26,10 @@ exports.createSubjectMarksReport = async (req, res) => {
             examtype,
         });
 
-        // Save the document to MongoDB
+        
         await report.save();
 
-        // Send success response
+       
         res.status(201).json({
             message: "Subject Marks Report created successfully",
             data: report,
@@ -46,15 +45,15 @@ exports.createSubjectMarksReport = async (req, res) => {
 
 
 exports.editSubjectMarksReport = async (req, res) => {
-    const { id } = req.params;  // Get the report ID from the URL parameter
+    const { id } = req.params;  
     const { admissionNo, name, rollNo, class: studentClass, section, subject, totalmarks, marksobtained, passorfail, date ,examtype} = req.body;
 
     try {
-        // Check if the report already exists with the same admissionNo and subject
+       
         const existingReport = await SubjectMarksReport.findOne({
             admissionNo,
             subject,
-            _id: { $ne: id }, // Exclude the current document (to allow editing the current one)
+            _id: { $ne: id },
         });
 
         if (existingReport) {
@@ -63,7 +62,7 @@ exports.editSubjectMarksReport = async (req, res) => {
             });
         }
 
-        // Find the report by ID
+       
         const report = await SubjectMarksReport.findById(id);
         if (!report) {
             return res.status(404).json({
@@ -71,7 +70,7 @@ exports.editSubjectMarksReport = async (req, res) => {
             });
         }
 
-        // Update the report with the new data
+        
         report.admissionNo = admissionNo;
         report.name = name;
         report.rollNo = rollNo;
@@ -81,13 +80,13 @@ exports.editSubjectMarksReport = async (req, res) => {
         report.totalmarks = totalmarks;
         report.marksobtained = marksobtained;
         report.passorfail = passorfail;
-        report.date = date;  // Update the date field
+        report.date = date;  
         report.examtype = examtype;
 
-        // Save the updated report to the database
+        
         const updatedReport = await report.save();
 
-        // Return the updated report
+      
         res.status(200).json({
             message: "Subject Marks Report updated successfully",
             data: updatedReport,
@@ -101,23 +100,21 @@ exports.editSubjectMarksReport = async (req, res) => {
     }
 };
 
-
-// Delete a subject marks report by ID
 exports.deleteSubjectMarksReport = async (req, res) => {
-    const { id } = req.params;  // Get the report ID from the URL parameter
+    const { id } = req.params;  
 
     try {
-        // Find and delete the report by ID
+       
         const deletedReport = await SubjectMarksReport.findByIdAndDelete(id);
 
-        // If the report does not exist, return an error message
+      
         if (!deletedReport) {
             return res.status(404).json({
                 message: "Report not found",
             });
         }
 
-        // Return success message if deletion is successful
+        
         res.status(200).json({
             message: "Subject Marks Report deleted successfully",
             data: deletedReport,
@@ -132,36 +129,35 @@ exports.deleteSubjectMarksReport = async (req, res) => {
 };
 
 
-// Get all subject marks reports with required filters
+
 exports.getAllSubjectMarksReports = async (req, res) => {
     try {
         const { class: studentClass, section, examtype } = req.query;
 
-        // Check if all required filters are provided
+       
         if (!studentClass || !section || !examtype) {
             return res.status(400).json({
                 message: "Missing required filters: class, section, and examtype are required.",
             });
         }
 
-        // Build the filter object with required filters
+       
         const filter = {
             class: studentClass,
             section: section,
             examtype: examtype
         };
 
-        // Retrieve filtered reports from the database
+       
         const reports = await SubjectMarksReport.find(filter);
 
-        // If no reports found, return a message
+  
         if (reports.length === 0) {
             return res.status(404).json({
                 message: "No reports found for the specified filters",
             });
         }
 
-        // Return the filtered reports
         res.status(200).json({
             message: "Subject Marks Reports fetched successfully",
             data: reports,

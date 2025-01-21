@@ -6,7 +6,7 @@ exports.addSubject = async (req, res) => {
   try {
     const { subject_name, type, subject_code } = req.body;
 
-    // Validate input
+   
     if (!subject_name || !type || !subject_code) {
       return res.status(400).json({
         status: 400,
@@ -15,7 +15,7 @@ exports.addSubject = async (req, res) => {
       });
     }
 
-    // Check if a subject with the same name already exists
+ 
     const existingSubject = await Subject.findOne({ subject_name });
     if (existingSubject) {
       return res.status(409).json({
@@ -25,7 +25,7 @@ exports.addSubject = async (req, res) => {
       });
     }
 
-    // Create a new subject
+
     const newSubject = new Subject({
       subject_name,
       type,
@@ -42,7 +42,6 @@ exports.addSubject = async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
-    // Handle database duplicate key error
     if (err.code === 11000) {
       const duplicateField = Object.keys(err.keyValue)[0];
       return res.status(409).json({
@@ -52,7 +51,7 @@ exports.addSubject = async (req, res) => {
       });
     }
 
-    // Generic server error
+
     res.status(500).json({
       status: 500,
       message: 'Server error',
@@ -63,10 +62,10 @@ exports.addSubject = async (req, res) => {
 
 exports.editSubject = async (req, res) => {
   try {
-    const { id } = req.params; // Get the ID from the request params
+    const { id } = req.params; 
     const { subject_name, type, subject_code } = req.body;
 
-    // Validate input
+
     if (!subject_name || !type || !subject_code) {
       return res.status(400).json({
         status: 400,
@@ -75,7 +74,7 @@ exports.editSubject = async (req, res) => {
       });
     }
 
-    // Validate the ID format
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         status: 400,
@@ -83,10 +82,9 @@ exports.editSubject = async (req, res) => {
       });
     }
 
-    // Check if a subject with the same name already exists (excluding the current subject)
     const existingName = await Subject.findOne({
       subject_name,
-      _id: { $ne: id }, // Exclude the current subject from the search
+      _id: { $ne: id }, 
     });
 
     if (existingName) {
@@ -97,10 +95,10 @@ exports.editSubject = async (req, res) => {
       });
     }
 
-    // Check if a subject with the same code already exists (excluding the current subject)
+
     const existingCode = await Subject.findOne({
       subject_code,
-      _id: { $ne: id }, // Exclude the current subject from the search
+      _id: { $ne: id }, 
     });
 
     if (existingCode) {
@@ -111,14 +109,13 @@ exports.editSubject = async (req, res) => {
       });
     }
 
-    // Perform the update
     const updatedSubject = await Subject.findByIdAndUpdate(
       id,
       { subject_name, type, subject_code },
-      { new: true, runValidators: true } // Return the updated document and run schema validators
+      { new: true, runValidators: true } 
     );
 
-    // If the subject is not found
+
     if (!updatedSubject) {
       return res.status(404).json({
         status: 404,
@@ -126,7 +123,6 @@ exports.editSubject = async (req, res) => {
       });
     }
 
-    // Success response
     res.status(200).json({
       status: 200,
       message: 'Subject updated successfully',
@@ -135,7 +131,6 @@ exports.editSubject = async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
-    // Handle database duplicate key error
     if (err.code === 11000) {
       const duplicateField = Object.keys(err.keyValue)[0];
       return res.status(409).json({
@@ -144,7 +139,7 @@ exports.editSubject = async (req, res) => {
       });
     }
 
-    // Generic server error
+
     res.status(500).json({
       status: 500,
       message: 'Server error',
@@ -153,7 +148,6 @@ exports.editSubject = async (req, res) => {
   }
 };
 
-// Get all subjects
 exports.getSubjects = async (req, res) => {
   try {
     const subjects = await Subject.find();
@@ -164,29 +158,29 @@ exports.getSubjects = async (req, res) => {
   }
 };
 
-// Delete a subject by ID
+
 exports.deleteSubject = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate the ID format
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ status : 400,message: 'Invalid subject ID' });
     }
 
-    // Find and delete the subject by ID
+ 
     const subject = await Subject.findByIdAndDelete(id);
 
-    // If the subject is not found
+
     if (!subject) {
       return res.status(404).json({ status : 404 ,message: 'Subject not found' });
     }
 
-    // Successfully deleted the subject, return status 200 with a message
+    
     res.status(200).json({
       status : 200,
       message: 'Subject deleted successfully',
-      data: subject, // Optionally, you can return the deleted subject as part of the response
+      data: subject, 
     });
   } catch (err) {
     console.error(err.message);

@@ -3,18 +3,18 @@ const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
 const { check, validationResult } = require("express-validator");
-const { getAdmissionCSV } = require('../controllers/admissionController'); // Controller for CSV functionality
+const { getAdmissionCSV } = require('../controllers/admissionController'); 
 const { getDisabledStudentsList, updateBlockStatus } = require('../controllers/admissionController');
 
-const Admission = require('../models/Admission'); // Adjust the path as needed
-const Student = require('../models/Student');  // Adjust the path if needed
-const BlockedStudent = require('../models/BlockedStudent');  // Import the BlockedStudent model
-// Add a student (POST) - Principal and Teacher can add students
+const Admission = require('../models/Admission'); 
+const Student = require('../models/Student'); 
+const BlockedStudent = require('../models/BlockedStudent');  
+
 
 
 router.post(
   "/add",
-  authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
+  authMiddleware(["principalAccess", "teacherAccess"]),
   [
     check("admissionNo").not().isEmpty().withMessage("Admission number is required"),
     check("name").not().isEmpty().withMessage("Student name is required"),
@@ -52,7 +52,7 @@ router.post(
         isDisabled: false,
         isMultiClass: false,
         deleted: false,
-        assignedTeacher: null, // Optionally assign a teacher later
+        assignedTeacher: null, 
       });
 
       await newStudent.save();
@@ -67,7 +67,7 @@ router.post(
   }
 );
 
-// Get all students (GET) - Principal can see all, Teacher can see their assigned students
+
 // router.get(
 //   "/",
 //   authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
@@ -119,14 +119,14 @@ router.post(
 // );
 router.get(
   "/allstudent",
-  authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
+  authMiddleware(["principalAccess", "teacherAccess"]), 
   async (req, res) => {
     const { rollNo, studentClass, section, sortField = "name", sortOrder = "asc" } = req.query;
 
-    // Build the search query
+   
     const query = {};
     if (rollNo) {
-      query.rollNo = rollNo; // Filter by rollNo
+      query.rollNo = rollNo; 
     }
     if (studentClass) {
       query.class = studentClass;
@@ -135,12 +135,10 @@ router.get(
       query.section = section;
     }
 
-    // If the user is a teacher, filter students by assignedTeacher
     if (req.userTeacherId) {
       query.assignedTeacher = req.userTeacherId;
     }
 
-    // Sorting logic
     const sortOptions = {};
     sortOptions[sortField] = sortOrder === "asc" ? 1 : -1;
 
@@ -153,15 +151,15 @@ router.get(
   }
 );
 
-// Edit student details (PUT) - Principal and Teacher can edit
+
 router.put(
   "/edit/:id",
-  authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
+  authMiddleware(["principalAccess", "teacherAccess"]), 
   async (req, res) => {
     const studentId = req.params.id;
     const updateData = req.body;
 
-    // Input validation (optional for updates)
+   
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ status:400, errors: errors.array() });
@@ -171,7 +169,7 @@ router.put(
       const updatedStudent = await Student.findByIdAndUpdate(
         studentId,
         updateData,
-        { new: true } // This option returns the updated document
+        { new: true } 
       );
 
       if (!updatedStudent) {
@@ -189,10 +187,9 @@ router.put(
   }
 );
 
-// Delete student (DELETE) - Principal and Teacher can delete
 router.delete(
   "/delete/:id",
-  authMiddleware(["principalAccess", "teacherAccess"]), // Allow principal and teacher
+  authMiddleware(["principalAccess", "teacherAccess"]), 
   async (req, res) => {
     const studentId = req.params.id;
 
@@ -291,7 +288,7 @@ router.put(
   }
 );
 
-// Route to download all admission details as a CSV
+
 router.get(
   '/download',
   authMiddleware(['principalAccess', 'teacherAccess']), // Only Principal and Teacher can access
@@ -430,41 +427,38 @@ router.get(
 //   }
 // );
 
-// You can add other routes or endpoints as necessary for your application
-// /bulk-delete/filter
+
 router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
   const { studentClass, section } = req.query;
 
-  // Create an empty query object
   const query = {};
 
-  // Filter by student class (valid classes 9, 10, 11, 12)
+
   if (studentClass && ['9', '10', '11', '12'].includes(studentClass)) {
     query.class = studentClass;
   }
 
-  // Filter by section (valid sections A, B, C, D)
   if (section && ['A', 'B', 'C', 'D'].includes(section)) {
     query.section = section;
   }
 
   try {
-    // Fetch students based on filter criteria
+
     const students = await Student.find(query).select(
       'admissionNo name class section dateOfBirth gender mobileNumber'
-    ); // Fetch the required fields
+    );
 
     if (students.length === 0) {
       return res.status(404).json({ status:404,message: 'No students found for the given criteria' });
     }
 
-    // Filter students based on class and section
+
     const filteredStudents = students.filter(student => 
       (studentClass ? student.class === studentClass : true) &&
       (section ? student.section === section : true)
     );
 
-    // Checking if there are students that match the filter criteria
+   
     if (filteredStudents.length === 0) {
       return res.status(404).json({ status:404, message: 'No students found for the given class and section' });
     }
@@ -480,29 +474,29 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
 });
 
 router.delete(
-  '/bulk-delete', // Route to delete multiple students by class and section
-  authMiddleware(['principalAccess']), // Only principals can delete
+  '/bulk-delete', 
+  authMiddleware(['principalAccess']),
   async (req, res) => {
     const { studentClass, section } = req.query;
 
-    // Create an empty query object
+    
     const query = {};
 
-    // Filter by student class (valid classes 9, 10, 11, 12)
+   
     if (studentClass && ['9', '10', '11', '12'].includes(studentClass)) {
       query.class = studentClass;
     }
 
-    // Filter by section (valid sections A, B, C, D)
+
     if (section && ['A', 'B', 'C', 'D'].includes(section)) {
       query.section = section;
     }
 
     try {
-      // Perform bulk deletion
+     
       const deletedStudents = await Student.deleteMany(query);
 
-      // Check if any students were deleted
+   
       if (deletedStudents.deletedCount === 0) {
         return res.status(404).json({
           status:404,
@@ -510,7 +504,6 @@ router.delete(
         });
       }
 
-      // Return success message with the count of deleted students
       return res.status(200).json({
         status:200,
         message: `${deletedStudents.deletedCount} students deleted successfully`,
@@ -526,7 +519,7 @@ router.delete("/delete/:id", async (req, res) => {
   try {
     const result = await StudentModel.findByIdAndDelete(id);
     if (result) {
-      res.status(204).send(); // No content
+      res.status(204).send(); 
     } else {
       res.status(404).json({ message: "Student not found" });
     }
@@ -535,14 +528,14 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 router.delete(
-  '/delete-all', // Route to delete all students
-  authMiddleware(['principalAccess']), // Only principals can delete
+  '/delete-all', 
+  authMiddleware(['principalAccess']),
   async (req, res) => {
     try {
-      // Delete all students
+     
       const deletedStudents = await Student.deleteMany({});
       
-      // Check if any students were deleted
+ 
       if (deletedStudents.deletedCount === 0) {
         return res.status(404).json({status:404, message: 'No students to delete' });
       }
@@ -557,12 +550,12 @@ router.delete(
   }
 );
 router.get(
-  '/filter/category', // Route for filtering students by category
-  authMiddleware(['principalAccess', 'teacherAccess']), // Authorization middleware
+  '/filter/category',
+  authMiddleware(['principalAccess', 'teacherAccess']), 
   async (req, res) => {
     const { category } = req.query;
 
-    // Check if category is valid
+    
     const validCategories = ['General', 'OBC', 'SC', 'ST'];
 
     if (category && !validCategories.includes(category)) {
@@ -570,10 +563,10 @@ router.get(
     }
 
     try {
-      // If category is not provided, we can skip category filtering
+     
       const filter = category ? { category } : {};
 
-      // Fetch students matching the category (or all students if category is not provided)
+ 
       const students = await Student.find(filter);
 
       if (students.length === 0) {
@@ -594,14 +587,14 @@ router.get(
 
 
 router.get(
-  '/students/filter/house', // Route to filter students by house name or description
-  authMiddleware(['principalAccess', 'teacherAccess']), // Authorization
+  '/students/filter/house',
+  authMiddleware(['principalAccess', 'teacherAccess']),
   async (req, res) => {
     const { houseName, houseDescription } = req.query;
 
     const query = {};
 
-    // Filter by house name or description
+ 
     if (houseName) {
       query.houseName = houseName;
     }
@@ -630,26 +623,22 @@ router.get(
   }
 );
 router.get(
-  '/filter/house', // Correct endpoint
-  authMiddleware(['principalAccess', 'teacherAccess']), // Authorization
+  '/filter/house',
+  authMiddleware(['principalAccess', 'teacherAccess']), 
   async (req, res) => {
     const { house, houseName, houseDescription } = req.query;
 
     const query = {};
 
-    // Filter by house if available
     if (house) {
-      query.house = house; // Example: "Red"
+      query.house = house; 
     }
-
-    // Filter by house name if available
     if (houseName) {
-      query.houseName = houseName; // Example: "Red House"
+      query.houseName = houseName; 
     }
 
-    // Filter by house description if available
     if (houseDescription) {
-      query.houseDescription = houseDescription; // Example: description
+      query.houseDescription = houseDescription; 
     }
 
     try {
@@ -671,8 +660,8 @@ router.get(
   }
 );
 router.post(
-  '/block-reasons', // Route to add a new block reason
-  authMiddleware(['principalAccess']), // Only principals can add block reasons
+  '/block-reasons',
+  authMiddleware(['principalAccess']), 
   async (req, res) => {
     const { name, description } = req.body;
 
@@ -684,7 +673,7 @@ router.post(
     }
 
     try {
-      // Create a new block reason
+     
       const blockReason = new BlockReason({ name, description });
       await blockReason.save();
 
@@ -700,8 +689,8 @@ router.post(
   }
 );
 router.put(
-  '/block-reasons/:id', // Route to edit a block reason by ID
-  authMiddleware(['principalAccess']), // Only principals can edit block reasons
+  '/block-reasons/:id', 
+  authMiddleware(['principalAccess']), 
   async (req, res) => {
     const { id } = req.params;
     const { name, description } = req.body;
@@ -714,7 +703,7 @@ router.put(
     }
 
     try {
-      // Update the block reason
+    
       const blockReason = await BlockReason.findByIdAndUpdate(
         id,
         { name, description },
@@ -738,8 +727,8 @@ router.put(
   }
 );
 router.delete(
-  '/block-reasons/:id', // Route to delete a block reason by ID
-  authMiddleware(['principalAccess']), // Only principals can delete block reasons
+  '/block-reasons/:id',
+  authMiddleware(['principalAccess']), 
   async (req, res) => {
     const { id } = req.params;
 
@@ -762,14 +751,14 @@ router.delete(
   }
 );
 router.get(
-  '/block-reasons', // Route to filter block reasons
+  '/block-reasons', 
   async (req, res) => {
     const { name, description } = req.query;
 
     const query = {};
 
     if (name) {
-      query.name = { $regex: name, $options: 'i' }; // Case-insensitive search
+      query.name = { $regex: name, $options: 'i' }; 
     }
 
     if (description) {

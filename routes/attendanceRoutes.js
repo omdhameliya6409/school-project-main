@@ -7,8 +7,8 @@ const {
 
 const router = express.Router();
 
-router.get("/Attendanceslist", getAttendances); 
-router.post("/add", addAttendance);       
-router.put("/:id", updateAttendance);   
+router.get("/Attendanceslist", getAttendances);
+router.post("/add", addAttendance);
+router.put("/:id", updateAttendance);
 
 module.exports = router;

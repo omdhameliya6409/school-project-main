@@ -187,7 +187,7 @@ router.post(
         .custom(value => value === 2000)
         .withMessage('Admission fee must be exactly 2000')
     ], async (req, res) => {
-      // Validate request body
+   
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ status: 400, message: 'Validation failed', errors: errors.array() });
@@ -219,15 +219,15 @@ router.post(
       } = req.body;
     
       try {
-        // Check for duplicate admission number
+      
         const existingAdmission = await Admission.findOne({ admissionNo });
         if (existingAdmission) {
           return res.status(400).json({ status: 400, message: 'Admission No already exists' });
         }
-     // Hash the password
+   
      const salt = await bcrypt.genSalt(10);
      const hashedPassword = await bcrypt.hash(password, salt);
-        // Create a new User document for authentication
+       
         const newUser = new User({
           email,
           password:hashedPassword, 
@@ -239,7 +239,7 @@ router.post(
     
         const savedUser = await newUser.save();
     
-        // Create a new Admission document
+      
         const newAdmission = new Admission({
           admissionNo,
           rollNo,
@@ -302,7 +302,7 @@ router.post(
 
       await newAttendance.save(); 
 
-      // Respond with the data
+   
       res.status(200).json({
         status: 200,
         message: 'Admission, student, and attendance added successfully.',

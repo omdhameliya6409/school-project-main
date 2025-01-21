@@ -1,11 +1,10 @@
 const ClassTimetable = require('../models/classTimetable');
 
-// Function to add a new class timetable entry
 const addClassTimetable = async (req, res) => {
   const { class: className, subject, teacherName, time, room, day, section } = req.body;
 
   try {
-    // Create a new timetable entry
+
     const newTimetable = new ClassTimetable({
       class: className,
       subject,
@@ -16,7 +15,6 @@ const addClassTimetable = async (req, res) => {
       section,
     });
 
-    // Save the new timetable entry
     await newTimetable.save();
     return res.status(200).json({
       status : 200,
@@ -29,20 +27,20 @@ const addClassTimetable = async (req, res) => {
   }
 };
 
-// Function to get the class timetable for a specific class and section
-const getClassTimetable = async (req, res) => {
-  const { className, section } = req.query; // Extract class and section from query parameters
 
-  // Validate query parameters
+const getClassTimetable = async (req, res) => {
+  const { className, section } = req.query;
+
+
   if (!className || !section) {
     return res.status(400).json({ status:400 ,message: 'Both className and section are required as query parameters.' });
   }
 
   try {
-    // Find the timetable entries for the specified class and section
+   
     const timetable = await ClassTimetable.find(
       { class: className, section: section },
-      'subject teacherName time room day' // Only select these fields
+      'subject teacherName time room day' 
     );
 
     if (!timetable || timetable.length === 0) {

@@ -4,7 +4,6 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Create a Live Meeting (POST)
 router.post("/live-meetings", async (req, res) => {
   try {
     const {
@@ -16,12 +15,12 @@ router.post("/live-meetings", async (req, res) => {
       createdBy,
     } = req.body;
 
-    // Validate input
+  
     if (!meetingTitle || !description || !dateTime || !meetingDuration || !apiUsed || !createdBy) {
       return res.status(400).json({ status: 400, message: "All fields are required." });
     }
 
-    // Create and save the live meeting
+   
     const liveMeeting = new LiveMeeting({
       meetingTitle,
       description,
@@ -43,10 +42,10 @@ router.post("/live-meetings", async (req, res) => {
   }
 });
 
-// Get All Live Meetings (GET)
+
 router.get("/live-meetings",authMiddleware(['principalAccess', 'teacherAccess']) ,  async (req, res) => {
   try {
-    const liveMeetings = await LiveMeeting.find().sort({ dateTime: 1 }); // Sort by dateTime
+    const liveMeetings = await LiveMeeting.find().sort({ dateTime: 1 }); 
     res.status(200).json({
       status: 200,
       message: "Live meetings fetched successfully",
@@ -59,16 +58,16 @@ router.get("/live-meetings",authMiddleware(['principalAccess', 'teacherAccess'])
 });
 
 
-// Get All Live Meetings (GET)
+
 router.get("/live-meetings/report", authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
   try {
-    const liveMeetings = await LiveMeeting.find().sort({ dateTime: 1 }); // Fetch and sort meetings
+    const liveMeetings = await LiveMeeting.find().sort({ dateTime: 1 }); 
 
-    // Add a random number for totalJoin
+    
     const meetingsWithRandomTotalJoin = liveMeetings.map((meeting) => {
       return {
         ...meeting.toObject(),
-        totalJoin: Math.floor(Math.random() * 101), // Random number between 0 and 100
+        totalJoin: Math.floor(Math.random() * 101), 
       };
     });
 
@@ -82,5 +81,5 @@ router.get("/live-meetings/report", authMiddleware(['principalAccess', 'teacherA
     res.status(500).json({ status: 500, message: "Internal server error" });
   }
 });
-// Export the router
+
 module.exports = router;

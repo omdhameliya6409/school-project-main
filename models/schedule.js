@@ -9,8 +9,6 @@ const scheduleSchema = new mongoose.Schema({
   room: { 
     type: Number,
     required: true,
-    min: 1, 
-    max: 20,
   },
   className: { type: Number, required: true },
   section: { type: String, required: true },

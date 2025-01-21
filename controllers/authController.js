@@ -212,7 +212,7 @@ exports.login = async (req, res) => {
       {
         userId: user._id,
         email: user.email, 
-        admissionNo: user.admissionNo,  // Correct field for admission number
+        admissionNo: user.admissionNo, 
         principalAccess: user.principalAccess || false,
         teacherAccess: user.teacherAccess || false,
         studentAccess: user.studentAccess || false,
@@ -247,30 +247,21 @@ exports.login = async (req, res) => {
   }
 };
 
-
-// Logout controller
 exports.logout = async (req, res) => {
   try {
-    // Step 1: Get the user based on the token
-    const user = await User.findById(req.user.userId); // Assuming req.user is set by the auth middleware
+ 
+    const user = await User.findById(req.user.userId);
 
     if (!user) {
       return res.status(400).json({ status: 400, message: 'Invalid token, User not found' });
     }
-
-    // Step 2: Invalidate the token
-    user.activeToken = null; // Remove the active token or any session-related information
+    user.activeToken = null; 
     await user.save();
-
-    // Step 3: Clear the cookie
     res.clearCookie('token', { httpOnly: true, secure: true, sameSite: 'strict' });
-
-    // Step 4: Send a success message
     return res.status(200).json({
       status: 200,
       message: 'Logout successful'
     });
-
   } catch (err) {
     console.error('Error during logout:', err);
     return res.status(500).json({
@@ -281,32 +272,24 @@ exports.logout = async (req, res) => {
   }
 };
 
-// IsLoggedIn controller
 exports.isLoggedIn = async (req, res) => {
   const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
-  // If no token is provided
   if (!token) {
     return res.status(400).json({ status: 400, message: 'No token provided, user is not logged in.' });
   }
 
   try {
-    // Verify the token
     const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Fetch the user from the database using decoded data
     const user = await User.findById(decoded.userId);
 
     if (!user) {
       return res.status(400).json({ status: 400, message: 'User not found, invalid token.' });
     }
 
-    // Check if the token is valid (not blacklisted or replaced)
     if (user.activeToken !== token) {
       return res.status(400).json({ status: 400, message: 'Token is invalidated, user is logged out.' });
     }
-
-    // User is logged in, return their data
     return res.status(200).json({
       status: 200,
       message: 'User is logged in.',
@@ -318,11 +301,9 @@ exports.isLoggedIn = async (req, res) => {
       },
     });
   } catch (err) {
-    // Handle token verification errors
     if (err.name === 'TokenExpiredError') {
       return res.status(400).json({ status: 400, message: 'Token expired, please login again.' });
     }
-
     return res.status(401).json({ status: 401, message: 'Invalid token, user is not logged in.' });
   }
 };

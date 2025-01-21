@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 require('dotenv').config();
 
 module.exports = {
-  // Forgot Password
+ 
   forgotPassword: async (req, res) => {
     const { email } = req.body;
 
@@ -16,13 +16,13 @@ module.exports = {
         return res.status(404).json({ status: 404, message: 'User not found' });
       }
 
-      // Generate a reset token
+     
       const resetToken = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
 
-      // Generate a reset link
+    
       const resetLink = `https://school-project-main.onrender.com/password/reset-password/${resetToken}`;
 
-      // Configure nodemailer
+      
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -33,7 +33,7 @@ module.exports = {
 
       // Send email
       const mailOptions = {
-        from: process.env.EMAIL_USER,  // Use environment variable for the sender email
+        from: process.env.EMAIL_USER,  
         to: email,
         subject: 'Password Reset Request',
         html: `
@@ -55,24 +55,24 @@ module.exports = {
     }
   },
 
-  // Reset Password
+  
   resetPassword: async (req, res) => {
     const { token, newPassword, confirmPassword } = req.body;
 
     try {
-      // Verify the reset token
+    
       const decoded = jwt.verify(token, JWT_SECRET);
       const userId = decoded.userId;
 
-      // Validate passwords
+    
       if (newPassword !== confirmPassword) {
         return res.status(400).json({ status: 400, message: 'Passwords do not match' });
       }
 
-      // Hash the new password
+     
       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      // Update the user's password
+  
       await User.findByIdAndUpdate(userId, { password: hashedPassword });
 
       res.status(200).json({ status: 200, message: 'Password reset successful' });

@@ -39,7 +39,6 @@ const examSchema = new mongoose.Schema({
   },
 });
 
-// Ensure uniqueness of a combination of fields
 examSchema.index({ examType: 1, date: 1, startTime: 1, subject: 1 }, { unique: true });
 
 

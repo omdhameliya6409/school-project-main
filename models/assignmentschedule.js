@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const AssignmentScheduleSchema = new mongoose.Schema({
+  
   class: { 
     type: String, 
     required: true, 
@@ -68,9 +69,10 @@ const AssignmentScheduleSchema = new mongoose.Schema({
     },
     submission: {
       type: String, 
-      enum: ['accept', 'reject'],
+      enum: ['accept', 'reject','complete'],
       default: null,
     },
+    submissionFile: String,
     reason: { 
       type: String, 
       required: function() {

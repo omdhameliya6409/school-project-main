@@ -1,5 +1,5 @@
 const Leave = require('../models/Leave'); 
-// Import Leave model// Helper function to format the date to DD-MM-YYYY format
+
 function formatDateToDDMMYYYY(date) {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -7,16 +7,12 @@ function formatDateToDDMMYYYY(date) {
   return `${day}-${month}-${year}`;
 }
 
-// Helper function to parse dates from DD-MM-YYYY format to Date object
 function parseDateFromDDMMYYYY(dateStr) {
   const [day, month, year] = dateStr.split('-');
   const date = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
   return date;
 }
 
-
-
-// POST - Apply Leave
 exports.applyLeave = async (req, res) => {
   try {
     const { name, class: className, section, applyDate, fromDate, toDate, status, reason, admissionNo } = req.body;
@@ -47,7 +43,7 @@ exports.applyLeave = async (req, res) => {
       });
     }
 
-    // Check for existing leave record for the same student (admissionNo) with the same date range
+   
     const existingLeave = await Leave.findOne({
       admissionNo,
       applyDate: parsedApplyDate,
@@ -62,7 +58,6 @@ exports.applyLeave = async (req, res) => {
       });
     }
 
-    // Create leave record
     const leave = new Leave({
       admissionNo,
       name,
@@ -77,9 +72,9 @@ exports.applyLeave = async (req, res) => {
 
     await leave.save();
 
-    // Convert dates to "DD-MM-YYYY" format for response
+  
     const formattedLeave = {
-      admissionNo: leave.admissionNo, // Show admissionNo first
+      admissionNo: leave.admissionNo, 
       _id: leave._id,
       name: leave.name,
       class: leave.class,
@@ -109,13 +104,13 @@ exports.applyLeave = async (req, res) => {
 
 
 
-// PUT - Edit Leave
+
 exports.editLeave = async (req, res) => {
   try {
-    const { leaveId } = req.params; // Leave ID from URL params
+    const { leaveId } = req.params; 
     const { name, class: className, section, applyDate, fromDate, toDate, status, reason, admissionNo } = req.body;
 
-    // Check for missing required fields
+    
     if (!name || !className || !section || !applyDate || !fromDate || !toDate || !status || !reason || !admissionNo) {
       return res.status(400).json({
         status: 400,
@@ -151,7 +146,6 @@ exports.editLeave = async (req, res) => {
       });
     }
 
-    // Check for existing leave record with the same admissionNo and same dates
     const existingLeave = await Leave.findOne({
       admissionNo,
       applyDate: parsedApplyDate,
@@ -166,7 +160,7 @@ exports.editLeave = async (req, res) => {
       });
     }
 
-    // Update the leave record
+
     leave.name = name;
     leave.class = className;
     leave.section = section;
@@ -176,12 +170,11 @@ exports.editLeave = async (req, res) => {
     leave.status = status;
     leave.reason = reason;
 
-    // Save the updated leave record
+
     await leave.save();
 
-    // Format the dates before sending the response
     const formattedLeave = {
-      admissionNo: leave.admissionNo, // Show admissionNo first
+      admissionNo: leave.admissionNo, 
       _id: leave._id,
       name: leave.name,
       class: leave.class,
@@ -208,15 +201,15 @@ exports.editLeave = async (req, res) => {
     });
   }
 };
-// DELETE - Delete Leave by ID
+
 exports.deleteLeave = async (req, res) => {
   try {
-    const { leaveId } = req.params; // Leave ID from URL params
+    const { leaveId } = req.params; 
 
-    // Find the leave record by ID and delete it
+
     const leave = await Leave.findByIdAndDelete(leaveId);
 
-    // If leave not found, return an error
+    
     if (!leave) {
       return res.status(404).json({
         status: 404,
@@ -224,7 +217,7 @@ exports.deleteLeave = async (req, res) => {
       });
     }
 
-    // Return success response
+
     return res.status(200).json({
       status: 200,
       message: "Leave deleted successfully.",
@@ -290,9 +283,9 @@ exports.deleteLeave = async (req, res) => {
 
 exports.LeavefilterByClassAndSection = async (req, res) => {
   try {
-    const { class: className, section } = req.query; // Rename 'class' to 'className'
+    const { class: className, section } = req.query; 
     
-    console.log("Query Parameters:", req.query);  // Log the query parameters
+    console.log("Query Parameters:", req.query); 
 
     if (!className || !section) {
       return res.status(400).json({

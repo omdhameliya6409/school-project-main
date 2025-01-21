@@ -17,7 +17,7 @@ const teacherSchema = new mongoose.Schema({
     type: String, 
     enum: ['General', 'OBC', 'SC', 'ST'], 
     required: true 
-  }, // Added category field with enum
+  },
 });
 
 module.exports = mongoose.model('Teacher', teacherSchema);

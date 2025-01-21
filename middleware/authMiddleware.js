@@ -37,44 +37,37 @@ const authMiddleware = (requiredRoles) => {
   return (req, res, next) => {
     const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
-    // If no token is provided
     if (!token) {
       return res.status(401).json({ message: 'Token is missing, please provide a valid token.' });
     }
 
-    // Verify the token
     jwt.verify(token, JWT_SECRET, async (err, decoded) => {
       if (err) {
-        // Handle specific error when the token has expired
+        
         if (err.name === 'TokenExpiredError') {
           return res.status(401).json({ message: 'Token has expired, please login again.' });
         }
 
-        // Handle other JWT errors (e.g., invalid token, malformed token)
         console.error("JWT verification failed:", err);
         return res.status(403).json({ message: 'Failed to authenticate token', error: err.message });
       }
-
-      // Attach decoded user data to the request object
+      
       req.user = decoded;
-
-      // Ensure requiredRoles is an array
+      
       if (!Array.isArray(requiredRoles)) {
         return res.status(500).json({ message: 'Invalid requiredRoles parameter, expected an array.' });
       }
 
-      // Check if the decoded token contains any of the required roles
       const hasRequiredRole = requiredRoles.some(role => decoded[role] === true);
 
       if (hasRequiredRole) {
-        // Optionally check if the token has been blacklisted
-        // (for example, by checking against the database)
+  
         const user = await User.findById(decoded.userId);
         if (user && user.activeToken !== token) {
           return res.status(401).json({ message: 'This token has been invalidated. Please log in again.' });
         }
 
-        return next(); // Proceed to the next middleware or route handler
+        return next(); 
       } else {
         return res.status(403).json({ message: 'You do not have permission to access this resource' });
       }

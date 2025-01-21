@@ -248,20 +248,52 @@ const getTeacherList = async (req, res) => {
 
     // If no teachers found, return a message
     if (teachers.length === 0) {
-      return res.status(404).json({ status:404 , essage: 'No teachers found for the given class and/or section.' });
+      return res.status(404).json({ status: 404, essage: 'No teachers found for the given class and/or section.' });
     }
 
     // Return the list of teachers
     res.status(200).json({
-      status:200 ,
+      status: 200,
       message: 'Teacher list fetched successfully.',
       teachers,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ status:500 ,message: 'Server error.', error: error.message });
+    res.status(500).json({ status: 500, message: 'Server error.', error: error.message });
   }
 };
 
+const getTeachercategory =
+  async (req, res) => {
+    const { category } = req.query;
 
-module.exports = { addTeacher , getTeacherList};
+    // Check if category is valid
+    const validCategories = ['General', 'OBC', 'SC', 'ST'];
+
+    if (category && !validCategories.includes(category)) {
+      return res.status(400).json({ status: 400, message: 'Invalid category' });
+    }
+
+    try {
+      // If category is not provided, we can skip category filtering
+      const filter = category ? { category } : {};
+
+      // Fetch students matching the category (or all students if category is not provided)
+      const Teachers = await Teacher.find(filter);
+
+      if (Teacher.length === 0) {
+        return res.status(404).json({ status: 404, message: 'No students found matching the category filter' });
+      }
+
+      res.status(200).json({
+        status: 200,
+        message: 'Students fetched successfully',
+        Teachers,
+      });
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      res.status(500).json({ status: 500, message: 'Error fetching students', error });
+    }
+  }
+
+module.exports = { addTeacher, getTeacherList , getTeachercategory};

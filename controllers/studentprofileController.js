@@ -11,19 +11,24 @@ const LiveClassMeeting = require('../models/LiveClassMeeting');
 const Leave = require('../models/Leave');
 const StudentBook = require('../models/StudentBook');
 const Book = require('../models/book');
-const assignmentschedule = require('../models/assignmentschedule');
+const AssignmentSchedule = require('../models/assignmentschedule');
 const Teacher = require('../models/Teacher');
+const upload = require('../fileUploadHandler'); 
+const mongoose = require('mongoose'); 
+const Admission = require('../models/Admission');
+const assignmentschedule = require('../models/assignmentschedule');
+require('dotenv').config(); 
 
 exports.getStudentProfile = async (req, res) => {
   try {
-    const { admissionNo } = req.query; // Get admissionNo from query parameters
-    const token = req.headers['authorization']; // Get token from headers
+    const { admissionNo } = req.query; 
+    const token = req.headers['authorization']; 
 
     if (!token) {
       return res.status(400).json({ status: 400, message: 'Token is required for authentication.' });
     }
 
-    // Extract token and decode to check if email matches
+   
     const rawToken = token.split(' ')[1];  // Extract token from Bearer <token> format
     let decoded;
     try {
@@ -746,12 +751,11 @@ exports.editBorrowedBook = async (req, res) => {
     res.status(500).json({ status: 500, message: 'Error editing the borrowed book.', error: error.message });
   }
 };
-
-
-exports.Getassignmentschedules = async (req, res) => {
+exports.getAssignmentsForStudent = async (req, res) => {
   try {
     const { rollNo } = req.query;
     const token = req.headers['authorization'];
+    
     if (!token) {
       return res.status(400).json({ status: 400, message: 'Token is required for authentication.' });
     }
@@ -764,77 +768,166 @@ exports.Getassignmentschedules = async (req, res) => {
       return res.status(403).json({ status: 403, message: 'Token verification failed.' });
     }
 
-    const studentProfile = await admissions.findOne({ rollNo });
+    const studentProfile = await admissions.findOne({ email: decoded.email, rollNo: rollNo });
     if (!studentProfile) {
       return res.status(404).json({ status: 404, message: 'Student profile not found.' });
     }
 
-    if (decoded.email !== studentProfile.email && !decoded.teacherAccess && !decoded.principalAccess) {
-      return res.status(403).json({ status: 403, message: 'Email mismatch with admission number.' });
+    const assignmentSchedules = await AssignmentSchedule.find({ 'students.rollNo': rollNo });
+    if (!assignmentSchedules.length) {
+      return res.status(404).json({ message: 'No assignments found for this student.' });
     }
 
-    const assignmentsToUpdate = await assignmentschedule.find({
-      class: studentProfile.class,
-      section: studentProfile.section,
-      status: { $regex: '^pending$', $options: 'i' }  // Case-insensitive match for 'pending'
+    const userAssignments = assignmentSchedules.map(schedule => {
+      const studentDetails = schedule.students.find(student => student.rollNo === parseInt(rollNo));
+      return {
+        assignmentId: schedule._id,
+        assignmentNote: schedule.assignmentNote,
+        subject: schedule.subject,
+        assignmentDate: schedule.assignmentDate,
+        submissionDate: schedule.submissionDate,
+        status: studentDetails?.status || 'pending',
+        marks: studentDetails?.marks || 0,
+        gradeNo: studentDetails?.gradeNo || null,
+        reason: studentDetails?.reason || null,
+        submission: studentDetails?.submission || null,
+        submissionFile: studentDetails?.submissionFile || null
+      };
     });
 
-    if (!assignmentsToUpdate) {
-      return res.status(404).json({ status: 404, message: 'Assignmentschedule not found.' });
-    }
-
-    // Map through assignments and fetch teacherName
-    const assignmentsWithTeacherName = await Promise.all(assignmentsToUpdate.map(async (schedule) => {
-      const teacher = await Teacher.findById(schedule.teacherId);
-      return {
-        Date: schedule.Date,
-        subjectname: schedule.subjectname,
-        assignmentname: schedule.assignmentname,
-        submissiondate: schedule.submissiondate,
-        status: schedule.status,
-        mark: schedule.mark,
-        teacherName: teacher ? teacher.name : 'Unknown',  // Assuming teacher has a 'name' field
-      };
-    }));
-
-    res.status(200).json({ status: 200, assignmentsWithTeacherName });
+    res.status(200).json({ message: 'Assignments retrieved successfully', assignments: userAssignments });
   } catch (error) {
-    console.error('Error fetching assignmentschedule:', error.message);
-    res.status(500).json({ status: 500, message: 'Error fetching assignmentschedule', error: error.message });
+    console.error('Error retrieving assignments:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 
-// Update Assignment Schedule Function
-exports.UpdateAssignmentSchedules = async (req, res) => {
+
+
+
+// exports.updateStudentSubmissionStatusWithFile = async (req, res) => {
+//   try {
+//       const { assignmentId, rollNo } = req.params;
+//       const token = req.headers['authorization']; 
+
+//       // You can access the decoded user data via req.user, which was set by the authenticateToken middleware
+//       console.log('Authenticated User:', req.user);
+
+//       // Find the assignment
+//       const assignment = await AssignmentSchedule.findById(assignmentId);
+
+//       if (!assignment) {
+//           return res.status(404).json({ message: 'Assignment not found' });
+//       }
+
+//       // Find the specific student
+//       const studentToUpdate = assignment.students.find(student => student.rollNo === parseInt(rollNo));
+
+//       if (!studentToUpdate) {
+//           return res.status(404).json({ message: 'Student not found in the assignment' });
+//       }
+
+//       // Update the student submission and file
+//       if (req.body.submission) {
+//           studentToUpdate.submission = req.body.submission;
+//       }
+
+//       if (req.file) {
+//           studentToUpdate.submissionFile = req.file.filename; // Save filename in DB
+//       }
+
+//       // Save the assignment document back to the database
+//       await assignment.save();
+
+//       res.status(200).json({
+//           message: 'Submission updated successfully',
+//           student: {
+//               rollNo: studentToUpdate.rollNo,
+//               name: studentToUpdate.name,
+//               submission: studentToUpdate.submission,
+//               submissionFile: studentToUpdate.submissionFile || null
+//           }
+//       });
+//   } catch (error) {
+//       console.error('Error updating submission:', error);
+//       res.status(500).json({ error: error.message });
+//   }
+// };
+
+exports.updateStudentSubmissionStatusWithFile = async (req, res) => {
   try {
     const { rollNo } = req.query;
-    const { status, marks, submissiondate } = req.body;
+    const { assignmentId } = req.params;
+    const token = req.headers['authorization'];
 
-    const assignmentsToUpdate = await AssignmentSchedule.find({
-      class: '12', // Example
-      section: 'C', // Example
-    }).populate('teacherId'); // Populate teacher info
-
-    if (assignmentsToUpdate.length === 0) {
-      return res.status(404).json({ status: 404, message: 'No assignments found.' });
+    if (!token) {
+      return res.status(400).json({ status: 400, message: 'Token is required for authentication.' });
     }
 
-    const updatedAssignments = assignmentsToUpdate.map((assignment) => {
-      if (status) assignment.status = status;
-      if (marks !== undefined) assignment.mark = marks;
-      if (submissiondate) assignment.submissiondate = submissiondate;
+    const rawToken = token.split(' ')[1];
+    let decoded;
 
-      return {
-        ...assignment.toObject(),
-        teacherName: assignment.teacherId ? assignment.teacherId.teacherName : 'Unknown',
-      };
+    try {
+      decoded = jwt.verify(rawToken, JWT_SECRET);
+    } catch (error) {
+      return res.status(403).json({ status: 403, message: 'Token verification failed.' });
+    }
+
+    // Find the student profile based on rollNo
+    const studentProfile = await admissions.findOne({ rollNo: parseInt(rollNo) });
+    if (!studentProfile) {
+      return res.status(404).json({ status: 404, message: 'Student profile not found.' });
+    }
+
+    // Check if the token email matches the student profile email
+    if (decoded.email !== studentProfile.email) {
+      return res.status(403).json({ status: 403, message: 'Unauthorized access. Email mismatch.' });
+    }
+
+    // Find the assignment
+    const assignment = await AssignmentSchedule.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    // Find the specific student
+    const studentToUpdate = assignment.students.find(student => student.rollNo === parseInt(rollNo));
+    if (!studentToUpdate) {
+      return res.status(404).json({ message: 'Student not found in the assignment' });
+    }
+
+    // Update the student submission and file
+    if (req.body.submission) {
+      studentToUpdate.submission = req.body.submission;
+    }
+
+    if (req.file) {
+      studentToUpdate.submissionFile = req.file.filename; // Save filename in DB
+    }
+
+    // Save the assignment document back to the database
+    await assignment.save();
+
+    res.status(200).json({
+      message: 'Submission updated successfully',
+      student: {
+        rollNo: studentToUpdate.rollNo,
+        name: studentToUpdate.name,
+        submission: studentToUpdate.submission,
+        submissionFile: studentToUpdate.submissionFile || null
+      }
     });
-
-    res.status(200).json({ status: 200, message: 'Assignments updated successfully.', updatedAssignments });
   } catch (error) {
-    res.status(500).json({ status: 500, message: 'Error updating assignment schedules', error: error.message });
+    console.error('Error updating submission:', error);
+    res.status(500).json({ error: error.message });
   }
 };
+
+
+
+
+
+
 
 
 

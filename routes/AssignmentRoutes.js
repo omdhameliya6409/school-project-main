@@ -8,7 +8,7 @@ const {
   deleteAssignment,
 } = require('../controllers/AssignmentController');
 
-// Assignment routes
+
 router.post('/add', authMiddleware(['principalAccess', 'teacherAccess']) ,createAssignment); 
 router.get('/list', authMiddleware(['principalAccess', 'teacherAccess']) ,getAssignmentByFilters); 
 router.put('/edit/:id', authMiddleware(['principalAccess', 'teacherAccess']) ,updateAssignment); 

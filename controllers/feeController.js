@@ -1,41 +1,41 @@
 const Fee = require('../models/Fee');
 const mongoose = require("mongoose");
-const authMiddleware = require('../middleware/authMiddleware'); // Import the authMiddleware
+const authMiddleware = require('../middleware/authMiddleware'); 
 const { v4: uuidv4 } = require('uuid'); 
 const Student = require('../models/Student');
 const Admission = require('../models/Admission');
 
 exports.getFeesByClassAndSection = [
-  authMiddleware(["principalAccess", "teacherAccess"]), // Restrict access to principal and teacher
+  authMiddleware(["principalAccess", "teacherAccess"]), 
   async (req, res) => {
     try {
       const { studentClass, section } = req.query;
       const filters = {};
 
-      // Apply filters only if the corresponding parameters are provided
+  
       if (studentClass) filters.class = studentClass;
       if (section) filters.section = section;
 
-      // Step 1: Find students by class and section
+      
       const students = await Student.find(filters);
 
       if (students.length === 0) {
         return res.status(404).json({ status: 404, message: 'No students found for the selected class and section' });
       }
 
-      // Step 2: Find fee data for these students
+    
       const fees = await Fee.find({ studentId: { $in: students.map(student => student._id) } })
-        .populate('studentId', 'name class section admissionNo dateOfBirth gender category mobileNumber'); // Include admissionFee in the populated student data
+        .populate('studentId', 'name class section admissionNo dateOfBirth gender category mobileNumber'); 
 
-      // Step 3: Create the response for each student
+     
       const studentFees = students.map(student => {
-        // Find fee data for the student
+       
         const fee = fees.find(fee => fee.studentId._id.toString() === student._id.toString());
 
-        // Retrieve the admission fee from the student's record, or default to 2000
-        const admissionFee = student.admissionFee || 2000; // Default to 2000 if admissionFee is not present
+        
+        const admissionFee = student.admissionFee || 2000; 
 
-        // If fee exists, calculate status (Paid or Pending)
+        
         if (fee) {
           const sem1Total = fee.sem1.amount + admissionFee;
           const sem2Total = fee.sem2.amount;
@@ -56,20 +56,19 @@ exports.getFeesByClassAndSection = [
             category: student.category,
             mobileNumber: student.mobileNumber,
             admissionFee: admissionFee, 
-            feeStatus: status, // Fee status (Paid or Pending)
+            feeStatus: status, 
             feeDetails: {
               feesGroup: fee.feesGroup,
               feesCode: fee.feesCode,
-              amount: totalAmount, // Total amount includes sem1, sem2, and admissionFee
+              amount: totalAmount, 
               discount: fee.discount,
               fine: fee.fine,
-              paid: totalPaid, // Total paid includes sem1, sem2, and admissionFee
-              balance: totalBalance // Total balance includes sem1, sem2, and admissionFee
+              paid: totalPaid, 
+              balance: totalBalance
             },
           };
         }
 
-        // If no fee record, show as Pending with default values
         return {
           studentId: student._id,
           name: student.name,
@@ -80,17 +79,17 @@ exports.getFeesByClassAndSection = [
           gender: student.gender,
           category: student.category,
           mobileNumber: student.mobileNumber,
-          feeStatus: 'Pending', // Fee status is Pending if no fee record exists
+          feeStatus: 'Pending', 
           feeDetails: {
             feesGroup: 'Not Paid',
             feesCode: 'N/A',
-            amount: admissionFee, // Only admission fee is applied here
+            amount: admissionFee, 
             discount: 0,
             fine: 0,
-            paid: admissionFee, // Show admission fee as paid
-            balance: admissionFee // The balance is the admission fee amount
+            paid: admissionFee, 
+            balance: admissionFee 
           },
-          admissionFee: admissionFee // Show the admission fee in the response
+          admissionFee: admissionFee
         };
       });
 
@@ -757,9 +756,9 @@ const feeStructure = {
 // ];
 
 exports.collectFee = [
-  authMiddleware(["principalAccess", "teacherAccess"]), // Only allow principal and teacher to collect fees
+  authMiddleware(["principalAccess", "teacherAccess"]), 
   async (req, res) => {
-    const { studentId } = req.params; // Student ID from URL
+    const { studentId } = req.params; 
     const {
       admissionNo,
       mode,
@@ -774,7 +773,7 @@ exports.collectFee = [
     } = req.body;
 
     try {
-      // Validate required fields
+    
       if (!feesGroup || !feesCode || !section || !studentClass || !semester || !admissionNo) {
         return res.status(400).json({
           status: 400,
@@ -782,7 +781,7 @@ exports.collectFee = [
         });
       }
 
-      // Allowed payment modes
+    
       const allowedModes = ["Cash", "Cheque", "DD", "Bank Transfer", "UPI", "Card"];
       if (!allowedModes.includes(mode)) {
         return res.status(400).json({
@@ -791,32 +790,32 @@ exports.collectFee = [
         });
       }
 
-      // Convert studentId to ObjectId
+ 
       const studentIdObject = new mongoose.Types.ObjectId(studentId);
 
-      // Fetch the student record to verify the existence of the student
+      
       const student = await Student.findById(studentIdObject);
       if (!student) {
         return res.status(404).json({ status: 404, message: "Student not found" });
       }
 
-      // Fetch the admission record to get the admission fee
+     
       const admissionRecord = await Admission.findOne({ admissionNo });
       if (!admissionRecord) {
         return res.status(404).json({ status: 404, message: "Admission record not found" });
       }
 
-      const admissionFee = admissionRecord.admissionFee || 2000; // Default to 2000 if admission fee is not present
+      const admissionFee = admissionRecord.admissionFee || 2000; 
 
-      // Fetch or create a fee record for the student
+      
       let fee = await Fee.findOne({ studentId: studentIdObject, section, class: studentClass });
       if (!fee) {
-        const classFees = feeStructure[studentClass] || { sem1: 7000, sem2: 6000 }; // Adjust if needed
+        const classFees = feeStructure[studentClass] || { sem1: 7000, sem2: 6000 };
 
-        // Set due date based on the semester
+       
         const dueDate = semester === "sem1" ? new Date(`2025-02-01`) : new Date(`2025-08-01`);
 
-        // Initialize fee record with admission fee included in the paid amount
+        
         fee = new Fee({
           admissionNo,
           studentId: studentIdObject,
@@ -830,11 +829,11 @@ exports.collectFee = [
           mode,
           discount: 0,
           fine: 0,
-          paid: admissionFee, // Include admission fee as paid by default
-          balance: classFees.sem1 + classFees.sem2 + admissionFee, // Include admission fee in total balance
+          paid: admissionFee,
+          balance: classFees.sem1 + classFees.sem2 + admissionFee, 
           sem1: {
             amount: classFees.sem1,
-            paid: admissionFee, // Include admission fee as part of sem1 paid
+            paid: admissionFee, 
             balance: classFees.sem1,
             status: "Unpaid",
           },
@@ -844,13 +843,13 @@ exports.collectFee = [
             balance: classFees.sem2,
             status: "Unpaid",
           },
-          totalAmount: classFees.sem1 + classFees.sem2 + admissionFee, // Include admission fee in total amount
-          totalPaid: admissionFee, // Include admission fee in total paid
-          totalBalance: classFees.sem1 + classFees.sem2 + admissionFee, // Include admission fee in total balance
+          totalAmount: classFees.sem1 + classFees.sem2 + admissionFee,
+          totalPaid: admissionFee, 
+          totalBalance: classFees.sem1 + classFees.sem2 + admissionFee,
         });
       }
 
-      // Validate the semester field
+     
       if (!fee[semester]) {
         return res.status(400).json({
           status: 400,
@@ -858,15 +857,14 @@ exports.collectFee = [
         });
       }
 
-      // Ensure no negative values for discount, fine, and amount paid
+     
       const validDiscount = Math.max(0, Math.min(isNaN(discount) ? 0 : Number(discount), fee[semester].amount));
       const validFine = Math.max(0, isNaN(fine) ? 0 : Number(fine));
       const validAmountPaid = Math.max(0, isNaN(amountPaid) ? 0 : Number(amountPaid));
 
-      // Calculate the total fee for the semester after applying discount and fine
+      
       const totalFee = fee[semester].amount - validDiscount + validFine;
 
-      // Ensure the paid amount does not exceed the total fee
       if (fee[semester].paid + validAmountPaid > totalFee) {
         return res.status(400).json({
           status: 400,
@@ -874,11 +872,11 @@ exports.collectFee = [
         });
       }
 
-      // Update semester-specific details
+     
       fee[semester].paid += validAmountPaid;
       fee[semester].balance = totalFee - fee[semester].paid;
 
-      // Update semester status
+   
       fee[semester].status =
         fee[semester].balance === 0
           ? "Paid"
@@ -886,8 +884,8 @@ exports.collectFee = [
           ? "Partial"
           : "Unpaid";
 
-      // Update overall fee details
-      fee.paid = fee.sem1.paid + fee.sem2.paid + admissionFee; // Add admission fee to total paid
+   
+      fee.paid = fee.sem1.paid + fee.sem2.paid + admissionFee; 
       fee.balance = fee.sem1.balance + fee.sem2.balance;
       fee.discount = (fee.discount || 0) + validDiscount;
       fee.fine = (fee.fine || 0) + validFine;
@@ -898,22 +896,22 @@ exports.collectFee = [
           ? "Partial"
           : "Unpaid";
 
-      // Save the updated fee record
+   
       await fee.save();
 
-      // Update the student's fee status
+    
       await Student.findByIdAndUpdate(studentIdObject, {
         feeStatus: fee.status,
       });
 
-      // Prepare response message
+     
       const remainingBalance = fee.sem1.balance + fee.sem2.balance;
       const message =
         fee.status === "Paid"
           ? "Both semester fees are fully paid, including the admission fee."
           : `Remaining fee balance including admission fee: ₹${remainingBalance}`;
 
-      // Respond with the updated fee and message, including detailed semester and total fee information
+     
       res.status(200).json({
         status: 200,
         message: `Fee details updated successfully. ${message}`,
@@ -945,11 +943,11 @@ exports.collectFee = [
             balance: fee.sem2.balance,
             status: fee.sem2.status,
           },
-           // Admission fee from the admission record
+           
           total: {
-            paid: fee.paid, // Total paid including admission fee
-            balance: fee.balance, // Total balance including admission fee
-            amount: fee.totalAmount, // Total amount including admission fee
+            paid: fee.paid, 
+            balance: fee.balance, 
+            amount: fee.totalAmount, 
           },
         },
       });
@@ -965,9 +963,9 @@ exports.collectFee = [
 ];
 
 
-// Get fee details for a student (Only principal and teacher can access this)
+
 exports.getFeeDetails = [
-  authMiddleware(["principalAccess", "teacherAccess"]),  // Ensure you have access to this route
+  authMiddleware(["principalAccess", "teacherAccess"]), 
   async (req, res) => {
     const { studentId } = req.params;
 
@@ -984,18 +982,18 @@ exports.getFeeDetails = [
     }
   }
 ];
-// Search payment by paymentId (Only principal and teacher can access this)
+
 exports.searchPaymentsByPaymentId = [
-  authMiddleware(["principalAccess", "teacherAccess"]), // Restrict access to principal and teacher
+  authMiddleware(["principalAccess", "teacherAccess"]),
   async (req, res) => {
     try {
-      const { paymentId } = req.query; // Payment ID passed in query parameter
+      const { paymentId } = req.query; 
 
       if (!paymentId) {
         return res.status(400).json({ status:400,message: 'Payment ID is required to search payments' });
       }
 
-      // Find the specific payment by paymentId
+    
       const fee = await Fee.findOne({ paymentId }).populate('studentId', 'name class section');
 
       if (!fee) {
@@ -1214,13 +1212,13 @@ exports.searchPaymentsByPaymentId = [
 // ];
 
 exports.editFee = [
-  authMiddleware(["principalAccess", "teacherAccess"]), // Only allow principal and teacher to edit fee
+  authMiddleware(["principalAccess", "teacherAccess"]), 
   async (req, res) => {
-    const { studentId } = req.params; // Student ID from URL
+    const { studentId } = req.params; 
     const { mode, amountPaid, discount, fine, feesGroup, feesCode, section, class: studentClass, semester } = req.body;
 
     try {
-      // Validate required fields
+     
       if (!feesGroup || !feesCode || !section || !studentClass || !semester) {
         return res.status(400).json({
           status: 400,
@@ -1228,7 +1226,7 @@ exports.editFee = [
         });
       }
 
-      // Allowed payment modes
+      
       const allowedModes = ['Cash', 'Cheque', 'DD', 'Bank Transfer', 'UPI', 'Card'];
       if (!allowedModes.includes(mode)) {
         return res.status(400).json({
@@ -1237,17 +1235,16 @@ exports.editFee = [
         });
       }
 
-      // Convert studentId to ObjectId
+   
       const studentIdObject = new mongoose.Types.ObjectId(studentId);
 
-      // Fetch the fee record
+
       let fee = await Fee.findOne({ studentId: studentIdObject, section, class: studentClass });
 
       if (!fee) {
         return res.status(404).json({ status: 404, message: "Fee record not found" });
       }
 
-      // Validate the semester field
       if (!fee[semester]) {
         return res.status(400).json({
           status: 400,
@@ -1255,7 +1252,8 @@ exports.editFee = [
         });
       }
 
-      // Reset old semester details
+      const admissionFee = fee.admissionFee || 2000;
+
       fee[semester] = {
         ...fee[semester],
         paid: 0,
@@ -1265,19 +1263,16 @@ exports.editFee = [
         status: 'Unpaid',
       };
 
-      // Validate discount, fine, and amountPaid
       const validDiscount = Math.max(0, Math.min(Number(discount) || 0, fee[semester].amount));
       const validFine = Math.max(0, Number(fine) || 0);
       const validAmountPaid = Math.max(0, Number(amountPaid) || 0);
 
-      // Calculate total amount after adjustments
       const totalAmount = fee[semester].amount - validDiscount + validFine;
 
       if (validAmountPaid > totalAmount) {
         return res.status(400).json({ status: 400, message: 'Paid amount exceeds total fee' });
       }
 
-      // Update semester details
       fee[semester] = {
         ...fee[semester],
         paid: validAmountPaid,
@@ -1287,7 +1282,8 @@ exports.editFee = [
         status: validAmountPaid === totalAmount ? 'Paid' : validAmountPaid > 0 ? 'Partial' : 'Unpaid',
       };
 
-      // Update the total fee status
+      const totalPaid = fee.sem1.paid + fee.sem2.paid + admissionFee;
+
       const allSemesters = [fee.sem1, fee.sem2];
       fee.status = allSemesters.every(s => s.status === 'Paid')
         ? 'Paid'
@@ -1295,10 +1291,8 @@ exports.editFee = [
         ? 'Partial'
         : 'Unpaid';
 
-      // Save fee record
       await fee.save();
 
-      // Update student's fee status
       const student = await Student.findById(studentIdObject);
       if (student) {
         student.feesDetails = student.feesDetails || [];
@@ -1306,7 +1300,6 @@ exports.editFee = [
         const existingDetail = student.feesDetails.find(
           detail => detail.feeRecordId.toString() === fee._id.toString()
         );
-
         if (existingDetail) {
           existingDetail.status = fee.status;
         } else {
@@ -1322,7 +1315,6 @@ exports.editFee = [
         await student.save();
       }
 
-      // Respond with updated details
       res.status(200).json({
         status: 200,
         message: `Fee updated successfully. Remaining balance: ₹${fee.sem1.balance + fee.sem2.balance}`,
@@ -1338,6 +1330,7 @@ exports.editFee = [
           mode: fee.mode,
           discount: fee.discount,
           fine: fee.fine,
+          admissionFee: admissionFee,
           createdAt: fee.createdAt,
           updatedAt: fee.updatedAt,
           __v: fee.__v,
@@ -1354,7 +1347,7 @@ exports.editFee = [
             status: fee.sem2.status,
           },
           total: {
-            paid: fee.sem1.paid + fee.sem2.paid,
+            paid: totalPaid,
             balance: fee.sem1.balance + fee.sem2.balance,
           },
         },
@@ -1365,6 +1358,7 @@ exports.editFee = [
     }
   },
 ];
+
 
 
 

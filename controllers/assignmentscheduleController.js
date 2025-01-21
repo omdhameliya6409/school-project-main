@@ -10,7 +10,7 @@ exports.createAssignment = async (req, res) => {
     try {
         const { class: className, section, Date, subjectname, assignmentname, submissiondate } = req.body;
 
-        // Check if an assignment with the same class, section, and Date already exists
+       
         const existingAssignment = await AssignmentSchedule.findOne({ class: className, section, Date });
         if (existingAssignment) {
             return res.status(400).json({
@@ -19,34 +19,34 @@ exports.createAssignment = async (req, res) => {
             });
         }
 
-        // Get token from the Authorization header
+       
         const token = req.headers['authorization'];
         if (!token) {
             return res.status(401).json({ message: 'Authorization token is missing' });
         }
 
-        // Remove the 'Bearer ' prefix if present
+      
         const tokenWithoutBearer = token.split(' ')[1];
 
         try {
-            // Decode the token to get user data
+           
             const decodedToken = jwt.verify(tokenWithoutBearer, JWT_SECRET);
             const teacherIdFromToken = decodedToken.userId;
             const emailFromToken = decodedToken.email;
 
-            // Find the teacher by email
+           
             const teacher = await Teacher.findOne({ email: emailFromToken });
 
             if (!teacher) {
                 return res.status(404).json({ message: 'Teacher not found' });
             }
 
-            // Check if the teacher's subject matches the one in the request
+           
             if (teacher.subject !== subjectname) {
                 return res.status(403).json({ message: 'You are not authorized to create assignments for this subject.' });
             }
 
-            // Proceed to create the new assignment
+          
             const newAssignment = new AssignmentSchedule({
                 class: className,
                 section,
@@ -54,8 +54,8 @@ exports.createAssignment = async (req, res) => {
                 subjectname,
                 assignmentname,
                 submissiondate,
-                teacherId: teacher._id,  // Add teacherId to the assignment
-                status: 'pending'  // Set status to 'pending' by default
+                teacherId: teacher._id, 
+                status: 'pending' 
             });
 
             const savedAssignment = await newAssignment.save();
@@ -78,26 +78,14 @@ exports.createAssignment = async (req, res) => {
 
 
 
-// Get assignments (GET)
-exports.getAssignments = async (req, res) => {
-    try {
-        const assignments = await AssignmentSchedule.find({}, 'Date subjectname assignmentname submissiondate');
-        res.status(200).json({
-            status : 200,
-            message: 'Assignments fetched successfully!',
-            data: assignments,
-        });
-    } catch (error) {
-        res.status(500).json({status : 500, message: 'Error fetching assignments', error: error.message });
-    }
-};
-// Update an existing assignment (PUT)
+
+
 exports.updateAssignment = async (req, res) => {
     try {
-        const { id } = req.params; // Assignment ID
+        const { id } = req.params; 
         const { class: className, section, Date, subjectname, assignmentname, submissiondate } = req.body;
 
-        // Check if the assignment exists
+    
         const existingAssignment = await AssignmentSchedule.findById(id);
         if (!existingAssignment) {
             return res.status(404).json({
@@ -106,13 +94,12 @@ exports.updateAssignment = async (req, res) => {
             });
         }
 
-        // Check for duplicate assignments when Date, class, and section are being updated
         if (Date && (className || section)) {
             const duplicate = await AssignmentSchedule.findOne({
                 class: className || existingAssignment.class,
                 section: section || existingAssignment.section,
                 Date: Date,
-                _id: { $ne: id }, // Exclude the current assignment
+                _id: { $ne: id }, 
             });
 
             if (duplicate) {
@@ -123,11 +110,10 @@ exports.updateAssignment = async (req, res) => {
             }
         }
 
-        // Update the assignment
         const updatedAssignment = await AssignmentSchedule.findByIdAndUpdate(
             id,
             { class: className, section, Date, subjectname, assignmentname, submissiondate },
-            { new: true, runValidators: true } // Return the updated document
+            { new: true, runValidators: true } 
         );
 
         res.status(200).json({
@@ -143,12 +129,12 @@ exports.updateAssignment = async (req, res) => {
         });
     }
 };
-// Delete an assignment by ID (DELETE)
+
 exports.deleteAssignment = async (req, res) => {
     try {
-        const { id } = req.params; // Assignment ID
+        const { id } = req.params;
 
-        // Check if the assignment exists
+      
         const assignment = await AssignmentSchedule.findById(id);
         if (!assignment) {
             return res.status(404).json({
@@ -157,7 +143,7 @@ exports.deleteAssignment = async (req, res) => {
             });
         }
 
-        // Delete the assignment
+     
         await AssignmentSchedule.findByIdAndDelete(id);
 
         res.status(200).json({
@@ -303,7 +289,7 @@ exports.addAssignmentWithStudents = async (req, res) => {
             marks = 0 
         } = req.body;
 
-        // Token Validation
+        
         const token = req.headers['authorization'];
         if (!token) {
             return res.status(400).json({status:400, message: 'Token is required for authentication.' });
@@ -319,7 +305,7 @@ exports.addAssignmentWithStudents = async (req, res) => {
         const teacherIdFromToken = decodedToken.userId;
         const emailFromToken = decodedToken.email;
 
-        // Find the teacher by email
+       
         const teacher = await Teacher.findOne({ email: emailFromToken });
         if (!teacher) {
             return res.status(404).json({ status:404 ,message: 'Teacher not found' });
@@ -329,13 +315,13 @@ exports.addAssignmentWithStudents = async (req, res) => {
             return res.status(403).json({ status:403 , message: 'You are not authorized to create assignments for this subject.' });
         }
 
-        // Fetch students
+      
         const students = await Student.find({ class: className, section });
         if (students.length === 0) {
             return res.status(404).json({ status:404 , message: 'No students found for the specified class and section' });
         }
 
-        // Validate status, gradeNo, and reason
+        
         if (status === 'rejected' && !reason) {
             return res.status(400).json({ status:400 , message: 'Reason is required when rejecting an assignment.' });
         }
@@ -344,7 +330,7 @@ exports.addAssignmentWithStudents = async (req, res) => {
             return res.status(400).json({ status:400 ,message: 'Marks and gradeNo are required when marking an assignment as complete.' });
         }
 
-        // Create student-specific assignment data
+      
         const studentAssignments = students.map(student => ({
             rollNo: student.rollNo,
             name: student.name,
@@ -354,7 +340,7 @@ exports.addAssignmentWithStudents = async (req, res) => {
             reason: status === 'rejected' ? reason : undefined
         }));
 
-        // Create the new assignment
+       
         const newAssignment = new AssignmentSchedule({
             class: className,
             section,
@@ -409,33 +395,33 @@ exports.addAssignmentWithStudents = async (req, res) => {
 //   };
 exports.updateAssignmentSubmission = async (req, res) => {
     try {
-        // Extract the 'id' (assignment ID) and 'rollNo' (student's roll number) from URL and query parameters
-        const { id } = req.params;           // Extract ID from the URL
-        const { rollNo } = req.query;        // Extract rollNo from query parameters
-        const { status, submission, marks, gradeNo, reason } = req.body; // Extract other data from the request body
+        
+        const { id } = req.params;           
+        const { rollNo } = req.query;     
+        const { status, submission, marks, gradeNo, reason } = req.body;
 
-        // Find the assignment by its ID
+      
         const assignment = await AssignmentSchedule.findById(id);
         if (!assignment) {
             return res.status(404).json({ message: 'Assignment not found' });
         }
 
-        // Find the student by rollNo within the assignment
+        
         const student = assignment.students.find(s => s.rollNo === parseInt(rollNo));
         if (!student) {
             return res.status(404).json({ message: 'Student not found in this assignment' });
         }
 
-        // Ensure the status is valid
+     
         const validStatuses = ['pending', 'complete', 'rejected'];
         if (status && !validStatuses.includes(status)) {
             return res.status(400).json({ message: 'Invalid status. It must be "pending", "complete", or "rejected".' });
         }
 
-        // Handle the status update
+       
         if (status === 'complete') {
             if (submission === 'accept') {
-                // Ensure marks and gradeNo are provided for acceptance
+                
                 if (marks === undefined || gradeNo === undefined) {
                     return res.status(400).json({
                         message: 'Both marks and gradeNo are required when submission is "accept".'
@@ -443,7 +429,7 @@ exports.updateAssignmentSubmission = async (req, res) => {
                 }
                 student.marks = marks;
                 student.gradeNo = gradeNo;
-                student.reason = undefined; // Clear reason for accepted submission
+                student.reason = undefined; 
             } else if (submission === 'reject') {
                 if (!reason) {
                     return res.status(400).json({
@@ -451,8 +437,8 @@ exports.updateAssignmentSubmission = async (req, res) => {
                     });
                 }
                 student.reason = reason;
-                student.marks = 0; // Set marks to 0 for rejection
-                student.gradeNo = undefined; // Clear gradeNo for rejected students
+                student.marks = 0; 
+                student.gradeNo = undefined;
             } else {
                 return res.status(400).json({
                     message: 'Invalid submission type. It must be "accept" or "reject".'
@@ -497,53 +483,130 @@ exports.updateAssignmentSubmission = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+// API to get assignments filtered by class, section, and gradeNo
+exports.getAssignmentSubmissiongradNo = async (req, res) => {
+    try {
+        // Extract query parameters from the request
+        const { class: classFilter, section, gradeNo } = req.query;
 
+        // Build a query object to filter assignments
+        const query = {};
 
-  
-  
-  // Controller to get assignment along with teacher's details
+        if (classFilter) {
+            query.class = classFilter; // Filter by class
+        }
+
+        if (section) {
+            query.section = section; // Filter by section
+        }
+
+        // If gradeNo is provided, filter by students' gradeNo
+        if (gradeNo) {
+            query['students.gradeNo'] = gradeNo; // Filter by gradeNo in students array
+        }
+
+        // Find assignments based on the query
+        const assignments = await AssignmentSchedule.find(query);
+
+        if (assignments.length === 0) {
+            return res.status(404).json({ message: 'No assignments found matching the filter criteria' });
+        }
+
+        // Filter students with a gradeNo and return only those students
+        const updatedAssignments = assignments.map(assignment => {
+            const filteredStudents = assignment.students.filter(student => student.gradeNo); // Only include students with gradeNo
+            return {
+                ...assignment.toObject(),
+                students: filteredStudents // Replace original students array with filtered students
+            };
+        });
+
+        // Send the filtered assignments in the response
+        res.status(200).json({
+            message: 'Assignments fetched successfully',
+            assignments: updatedAssignments
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getAssignmentSubmissionfilter = async (req, res) => {
+    try {
+        // Extract query parameters from the request
+        const { class: classFilter, section, submission } = req.query;
+
+        // Ensure class, section, and submission are provided
+        if (!classFilter || !section || !submission) {
+            return res.status(400).json({ message: 'Class, section, and submission type are required.' });
+        }
+
+        // Query to filter assignments by class and section
+        const query = {};
+        if (classFilter) query.class = classFilter;
+        if (section) query.section = section;
+
+        // Fetch assignments based on the query
+        const assignments = await AssignmentSchedule.find(query);
+
+        if (assignments.length === 0) {
+            return res.status(404).json({ message: 'No assignments found' });
+        }
+
+        // Map assignments to filter students based on submission type and remove empty students array
+        const updatedAssignments = assignments.map(assignment => {
+            const filteredStudents = assignment.students.filter(student => student.submission === "accept" || student.submission === "reject");
+
+            // Only include assignments that have at least one student with a valid submission
+            if (filteredStudents.length > 0) {
+                return {
+                    ...assignment.toObject(),
+                    students: filteredStudents // Only include students with valid submission
+                };
+            }
+            return null; // Exclude assignment if no valid students
+        }).filter(assignment => assignment !== null); // Remove null assignments from the array
+
+        // Send the filtered assignments as the response
+        res.status(200).json({
+            message: 'Assignments fetched successfully',
+            assignments: updatedAssignments
+        });
+    } catch (error) {
+        console.error("Error fetching assignments:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
 exports.getAssignmentWithTeacher = async (req, res) => {
     try {
-      const { class: className, section } = req.params;
-  
-      // Fetch the assignment based on class and section
-      const assignment = await AssignmentSchedule.findOne({ class: className, section })
-        .populate({
-          path: 'assignedTeacher', // Populating the assigned teacher
-          select: 'name _id' // Only include name and teacher ID (_id)
-        });
-  
-      if (!assignment) {
-        return res.status(404).json({ message: 'Assignment not found for the specified class and section' });
-      }
-  
-      // Returning the assignment with the teacher's details
-      const assignmentWithTeacher = {
-        ...assignment.toObject(),
-        teacher: {
-          name: assignment.assignedTeacher?.name,
-          teacherId: assignment.assignedTeacher?._id
-        }
-      };
-  
-      res.status(200).json({ assignment: assignmentWithTeacher });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  };
-  
-  
-  
-  
+        const { class: className, section } = req.params;
 
+        // Fetch the assignment based on class and section
+        const assignment = await AssignmentSchedule.findOne({ class: className, section })
+            .populate({
+                path: 'assignedTeacher',
+                select: 'name _id'
+            });
+
+        if (!assignment) {
+            return res.status(404).json({ message: 'Assignment not found for the specified class and section' });
+        }
+
+        res.status(200).json({
+            assignment: assignment.toObject() // Ensure all fields, including `submissionFile`, are included
+        });
+    } catch (error) {
+        console.error('Error fetching assignment:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
 
 
 
   exports.getAssignments = async (req, res) => {
     try {
-      const { class: classFilter, section } = req.query; // Extract class and section from query params
-  
-      // Build the query dynamically based on the provided filters
+      const { class: classFilter, section } = req.query;
+
       const query = {};
       if (classFilter) query.class = classFilter;
       if (section) query.section = section;
@@ -578,7 +641,6 @@ exports.getAssignmentWithTeacher = async (req, res) => {
       });
     }
   };
-  
   
   exports.getFilteredAssignments = async (req, res) => {
     try {
@@ -621,63 +683,3 @@ exports.getAssignmentWithTeacher = async (req, res) => {
       });
     }
   };
-
-
-
-  // Controller method to filter assignments by grade
-  exports.filterAssignmentsByGrade = async (req, res) => {
-      try {
-          const { class: className, section, gradeNo } = req.query;
-  
-          // Check if all required query parameters are present
-          if (!className || !section || !gradeNo) {
-              return res.status(400).json({
-                  status: 400,
-                  message: 'Missing required query parameters: class, section, and gradeNo are required.'
-              });
-          }
-  
-          // Query to find assignments that match class, section, and students' gradeNo
-          const assignments = await AssignmentSchedule.find({
-              class: className,
-              section: section,
-              'students.gradeNo': gradeNo // This filters for students who have the specified gradeNo
-          });
-  
-          // Filter students in the found assignments to include only those with the specified gradeNo
-          assignments.forEach(assignment => {
-              assignment.students = assignment.students
-                  .filter(student => student.gradeNo === gradeNo) // Keep only students with the requested gradeNo
-                  .map(student => ({ gradeNo: student.gradeNo })); // Only return gradeNo
-          });
-  
-          // Filter out assignments that don't have any students with the requested gradeNo
-          const filteredAssignments = assignments.filter(assignment => assignment.students.length > 0);
-  
-          // If no assignments are found, send a not found response
-          if (filteredAssignments.length === 0) {
-              return res.status(404).json({
-                  status: 404,
-                  message: 'No assignments found for the provided filters.'
-              });
-          }
-  
-          // Return the filtered assignments
-          return res.status(200).json({
-              status: 200,
-              message: 'Filtered assignments fetched successfully.',
-              assignments: filteredAssignments
-          });
-  
-      } catch (error) {
-          return res.status(500).json({
-              status: 500,
-              message: 'Error fetching assignments',
-              error: error.message
-          });
-      }
-  };
-  
-  
-  
-  
