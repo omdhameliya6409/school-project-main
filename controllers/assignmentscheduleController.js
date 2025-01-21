@@ -509,7 +509,7 @@ exports.getAssignmentSubmissiongradNo = async (req, res) => {
         const assignments = await AssignmentSchedule.find(query);
 
         if (assignments.length === 0) {
-            return res.status(404).json({ message: 'No assignments found matching the filter criteria' });
+            return res.status(404).json({ status:404 ,  message: 'No assignments found matching the filter criteria' });
         }
 
         // Filter students with a gradeNo and return only those students
@@ -523,11 +523,12 @@ exports.getAssignmentSubmissiongradNo = async (req, res) => {
 
         // Send the filtered assignments in the response
         res.status(200).json({
+            status:200,
             message: 'Assignments fetched successfully',
             assignments: updatedAssignments
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ status:200 ,  error: error.message });
     }
 };
 
