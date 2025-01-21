@@ -263,37 +263,38 @@ const getTeacherList = async (req, res) => {
   }
 };
 
-const getTeachercategory =
-  async (req, res) => {
-    const { category } = req.query;
+const getTeachercategory = async (req, res) => {
+  const { category } = req.query;
 
-    // Check if category is valid
-    const validCategories = ['General', 'OBC', 'SC', 'ST'];
-
-    if (category && !validCategories.includes(category)) {
-      return res.status(400).json({ status: 400, message: 'Invalid category' });
-    }
-
-    try {
-      // If category is not provided, we can skip category filtering
-      const filter = category ? { category } : {};
-
-      // Fetch students matching the category (or all students if category is not provided)
-      const Teachers = await Teacher.find(filter);
-
-      if (Teacher.length === 0) {
-        return res.status(404).json({ status: 404, message: 'No students found matching the category filter' });
-      }
-
-      res.status(200).json({
-        status: 200,
-        message: 'Students fetched successfully',
-        Teachers,
-      });
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      res.status(500).json({ status: 500, message: 'Error fetching students', error });
-    }
+  // Check if category is provided
+  if (!category) {
+    return res.status(400).json({ status: 400, message: 'Category is required' });
   }
+
+  // Check if category is valid
+  const validCategories = ['General', 'OBC', 'SC', 'ST'];
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({ status: 400, message: 'Invalid category' });
+  }
+
+  try {
+    // Fetch teachers matching the category
+    const teachers = await Teacher.find({ category });
+
+    if (teachers.length === 0) {
+      return res.status(404).json({ status: 404, message: 'No teachers found matching the category filter' });
+    }
+
+    res.status(200).json({
+      status: 200,
+      message: 'Teachers fetched successfully',
+      teachers,
+    });
+  } catch (error) {
+    console.error('Error fetching teachers:', error);
+    res.status(500).json({ status: 500, message: 'Error fetching teachers', error });
+  }
+};
+
 
 module.exports = { addTeacher, getTeacherList , getTeachercategory};
