@@ -36,6 +36,7 @@ const app = express();
 // Allowed Origins
 const allowedOrigins = [
   "https://school-project-main.onrender.com", 
+  "https://jwqngnpq-1000.inc1.devtunnels.ms",
   "http://localhost:5173",
   "http://192.168.31.130:8000",
 ];

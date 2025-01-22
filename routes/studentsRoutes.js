@@ -429,17 +429,64 @@ router.get(
 
 
 // Filter students without direct deletion
+// router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
+//   const { studentClass, section } = req.query;
+
+//   // Build query
+//   const query = {};
+//   if (studentClass && ['9', '10', '11', '12'].includes(studentClass)) {
+//     query.class = studentClass;
+//   }
+//   if (section && ['A', 'B', 'C', 'D'].includes(section)) {
+//     query.section = section;
+//   }
+
+//   try {
+//     // Fetch students matching query
+//     const students = await Student.find(query).select(
+//       'admissionNo name class section dateOfBirth gender mobileNumber'
+//     );
+
+//     if (students.length === 0) {
+//       return res.status(404).json({
+//         status: 404,
+//         message: 'No students found for the given criteria',
+//       });
+//     }
+
+//     res.status(200).json({
+//       status: 200,
+//       message: 'Students retrieved successfully',
+//       data: students,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       status: 500,
+//       message: 'Error retrieving students',
+//       error: error.message,
+//     });
+//   }
+// });
 router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
   const { studentClass, section } = req.query;
 
-  // Build query
-  const query = {};
-  if (studentClass && ['9', '10', '11', '12'].includes(studentClass)) {
-    query.class = studentClass;
+  // Validate query parameters for class and section
+  if (!studentClass || !['9', '10', '11', '12'].includes(studentClass)) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Invalid studentClass. Allowed values are 9, 10, 11, 12.',
+    });
   }
-  if (section && ['A', 'B', 'C', 'D'].includes(section)) {
-    query.section = section;
+
+  if (!section || !['A', 'B', 'C', 'D'].includes(section)) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Invalid section. Allowed values are A, B, C, D.',
+    });
   }
+
+  // Build query based on valid parameters
+  const query = { class: studentClass, section: section };
 
   try {
     // Fetch students matching query
@@ -454,10 +501,14 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
       });
     }
 
+    // Assuming you want to include the token from the request (e.g., JWT in headers)
+    const token = req.headers['authorization'] || '';  // Get token from the Authorization header
+
     res.status(200).json({
       status: 200,
       message: 'Students retrieved successfully',
       data: students,
+      token: token,  // Sending the token along with the response
     });
   } catch (error) {
     res.status(500).json({
@@ -468,6 +519,58 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
   }
 });
 
+// router.delete('/bulk-delete', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
+//   const { studentId, studentClass, section } = req.query;
+
+//   if (!studentClass || !section) {
+//     return res.status(400).json({
+//       status: 400,
+//       message: 'Invalid input: Provide class and section as query parameters',
+//     });
+//   }
+
+//   // Build the query object based on the provided parameters
+//   const query = {
+//     class: studentClass,
+//     section: section,
+//   };
+
+//   // If studentId is provided, add it to the query to filter by specific student IDs
+//   if (studentId) {
+//     const studentIds = studentId.split(',').map(id => new mongoose.Types.ObjectId(id.trim()));
+//     query._id = { $in: studentIds };
+//   }
+
+//   try {
+//     // Find matching students based on the class, section, and optionally studentId
+//     const matchingStudents = await Student.find(query);
+//     console.log('Matching Students Before Deletion:', matchingStudents);
+
+//     if (matchingStudents.length === 0) {
+//       return res.status(404).json({
+//         status: 404,
+//         message: 'No students found for the given class, section, and IDs',
+//       });
+//     }
+
+//     // Perform deletion
+//     const result = await Student.deleteMany(query);
+//     console.log('Deletion Result:', result);
+
+//     res.status(200).json({
+//       status: 200,
+//       message: 'Students deleted successfully',
+//       deletedCount: result.deletedCount,
+//     });
+//   } catch (error) {
+//     console.error('Error deleting students:', error);
+//     res.status(500).json({
+//       status: 500,
+//       message: 'Error deleting students',
+//       error: error.message,
+//     });
+//   }
+// });
 router.delete('/bulk-delete', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
   const { studentId, studentClass, section } = req.query;
 
@@ -506,10 +609,13 @@ router.delete('/bulk-delete', authMiddleware(['principalAccess', 'teacherAccess'
     const result = await Student.deleteMany(query);
     console.log('Deletion Result:', result);
 
+    // Send a token along with the response
+    const token = req.headers.authorization || ''; // Assuming the token was sent in the Authorization header
     res.status(200).json({
       status: 200,
       message: 'Students deleted successfully',
       deletedCount: result.deletedCount,
+      token: token,  // Include the token in the response
     });
   } catch (error) {
     console.error('Error deleting students:', error);
@@ -520,6 +626,9 @@ router.delete('/bulk-delete', authMiddleware(['principalAccess', 'teacherAccess'
     });
   }
 });
+
+
+
 // router.delete("/bulk-delete-by-class-section", async (req, res) => {
 //   const { studentClass, section } = req.body;
 
