@@ -9,7 +9,7 @@ const { getDisabledStudentsList, updateBlockStatus } = require('../controllers/a
 const Admission = require('../models/Admission'); 
 const Student = require('../models/Student'); 
 const BlockedStudent = require('../models/BlockedStudent');  
-
+const mongoose = require('mongoose');
 
 
 router.post(
@@ -428,92 +428,91 @@ router.get(
 // );
 
 
+// Filter students without direct deletion
 router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
   const { studentClass, section } = req.query;
 
+  // Build query
   const query = {};
-
-
   if (studentClass && ['9', '10', '11', '12'].includes(studentClass)) {
     query.class = studentClass;
   }
-
   if (section && ['A', 'B', 'C', 'D'].includes(section)) {
     query.section = section;
   }
 
   try {
-
+    // Fetch students matching query
     const students = await Student.find(query).select(
       'admissionNo name class section dateOfBirth gender mobileNumber'
     );
 
     if (students.length === 0) {
-      return res.status(404).json({ status:404,message: 'No students found for the given criteria' });
-    }
-
-
-    const filteredStudents = students.filter(student => 
-      (studentClass ? student.class === studentClass : true) &&
-      (section ? student.section === section : true)
-    );
-
-   
-    if (filteredStudents.length === 0) {
-      return res.status(404).json({ status:404, message: 'No students found for the given class and section' });
+      return res.status(404).json({
+        status: 404,
+        message: 'No students found for the given criteria',
+      });
     }
 
     res.status(200).json({
-      status:200,
+      status: 200,
       message: 'Students retrieved successfully',
-      data: filteredStudents,
+      data: students,
     });
   } catch (error) {
-    res.status(500).json({ status:500,message: 'Error retrieving students', error });
+    res.status(500).json({
+      status: 500,
+      message: 'Error retrieving students',
+      error: error.message,
+    });
   }
 });
 
-router.delete(
-  '/bulk-delete', 
-  authMiddleware(['principalAccess']),
-  async (req, res) => {
-    const { studentClass, section } = req.query;
+router.delete('/bulk-delete', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
+  const { studentId } = req.query;
 
-    
-    const query = {};
-
-   
-    if (studentClass && ['9', '10', '11', '12'].includes(studentClass)) {
-      query.class = studentClass;
-    }
-
-
-    if (section && ['A', 'B', 'C', 'D'].includes(section)) {
-      query.section = section;
-    }
-
-    try {
-     
-      const deletedStudents = await Student.deleteMany(query);
-
-   
-      if (deletedStudents.deletedCount === 0) {
-        return res.status(404).json({
-          status:404,
-          message: 'No students found matching your filters to delete',
-        });
-      }
-
-      return res.status(200).json({
-        status:200,
-        message: `${deletedStudents.deletedCount} students deleted successfully`,
-      });
-    } catch (error) {
-      console.error('Error deleting students:', error);
-      return res.status(500).json({ status:500, message: 'Error deleting students', error });
-    }
+  if (!studentId) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Invalid input: Provide student IDs as query parameters',
+    });
   }
-);
+
+  try {
+    // Split the query parameter into an array of IDs
+    const studentIds = studentId.split(',').map(id => new mongoose.Types.ObjectId(id.trim()));
+    console.log('Transformed IDs:', studentIds);
+
+    // Debugging: Check matching students
+    const matchingStudents = await Student.find({ _id: { $in: studentIds } });
+    console.log('Matching Students Before Deletion:', matchingStudents);
+
+    const result = await Student.deleteMany({ _id: { $in: studentIds } });
+    console.log('Deletion Result:', result);
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: 'No students found with the provided IDs',
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      message: 'Students deleted successfully',
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error('Error deleting students:', error);
+    res.status(500).json({
+      status: 500,
+      message: 'Error deleting students',
+      error: error.message,
+    });
+  }
+});
+
+
 router.delete("/delete/:id", async (req, res) => {
   const { id } = req.params;
   try {
