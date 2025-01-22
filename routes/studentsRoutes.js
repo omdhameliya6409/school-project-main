@@ -612,8 +612,10 @@ router.delete('/bulk-delete', authMiddleware(['principalAccess', 'teacherAccess'
     // Send a token along with the response
     const token = req.headers.authorization || ''; // Assuming the token was sent in the Authorization header
     res.status(200).json({
+      status: 200,
+      message: 'Students deleted successfully',
+      deletedCount: result.deletedCount,
       token: token,  // Include the token in the response
-      
     });
   } catch (error) {
     console.error('Error deleting students:', error);
