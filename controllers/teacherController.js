@@ -133,7 +133,6 @@ const addTeacher = async (req, res) => {
     // Validate required fields
     if (
       !teacherId ||
-      typeof teacherId !== 'number' ||
       !name ||
       !experience ||
       !teacherClass ||

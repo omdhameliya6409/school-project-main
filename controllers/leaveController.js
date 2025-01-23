@@ -102,9 +102,6 @@ exports.applyLeave = async (req, res) => {
   }
 };
 
-
-
-
 exports.editLeave = async (req, res) => {
   try {
     const { leaveId } = req.params; 
@@ -159,8 +156,6 @@ exports.editLeave = async (req, res) => {
         message: "Leave record with the same dates already exists for this student."
       });
     }
-
-
     leave.name = name;
     leave.class = className;
     leave.section = section;
@@ -169,7 +164,6 @@ exports.editLeave = async (req, res) => {
     leave.toDate = parsedToDate;
     leave.status = status;
     leave.reason = reason;
-
 
     await leave.save();
 
