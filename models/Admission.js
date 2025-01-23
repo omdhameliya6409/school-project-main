@@ -26,7 +26,7 @@ const admissionSchema = new mongoose.Schema({
   feeAmount: {
     type: Number,
     required: true,
-    default: 2000, 
+
   },
 });
 module.exports = mongoose.model('Admission', admissionSchema);

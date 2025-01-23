@@ -162,7 +162,8 @@ const bcrypt = require('bcrypt');
 //   }
 // );
 router.post(
-  '/add', authMiddleware(['principalAccess', 'teacherAccess']),
+  '/add',
+  authMiddleware(['principalAccess', 'teacherAccess']),
   [
     check('admissionNo').notEmpty().withMessage('Admission No is required'),
     check('class').notEmpty().withMessage('Class is required'),
@@ -172,28 +173,84 @@ router.post(
       .isIn(['A', 'B', 'C', 'D'])
       .withMessage('Invalid section, it should be one of A, B, C, D'),
     check('firstName').notEmpty().withMessage('First Name is required'),
-    check('gender').notEmpty().withMessage('Gender is required')
+    check('gender')
+      .notEmpty()
+      .withMessage('Gender is required')
       .isIn(['Male', 'Female'])
       .withMessage('Gender should be Male or Female'),
     check('dateOfBirth').notEmpty().withMessage('Date of Birth is required').isDate().withMessage('Invalid Date of Birth'),
     check('mobileNumber').isMobilePhone().withMessage('Invalid Mobile Number'),
     check('admissionDate').notEmpty().withMessage('Admission Date is required').isDate().withMessage('Invalid Admission Date'),
     check('email').isEmail().withMessage('Invalid email'),
-      check('password')
-        .notEmpty()
-        .withMessage('Password is required'), 
-        check('password').notEmpty().withMessage('Password is required'),
-        check('feeAmount')
-        .custom(value => value === 2000)
-        .withMessage('Admission fee must be exactly 2000')
-    ], async (req, res) => {
-   
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ status: 400, message: 'Validation failed', errors: errors.array() });
+    check('password')
+      .notEmpty()
+      .withMessage('Password is required'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ status: 400, message: 'Validation failed', errors: errors.array() });
+    }
+
+    const {
+      admissionNo,
+      rollNo,
+      class: studentClass,
+      section,
+      firstName,
+      lastName,
+      gender,
+      dateOfBirth,
+      category,
+      religion,
+      caste,
+      mobileNumber,
+      email,
+      admissionDate,
+      bloodGroup,
+      houseaddress,
+      height,
+      weight,
+      measurementDate,
+      medicalHistory,
+      password,
+      feeAmount,
+    } = req.body;
+
+    // Extract the part before '@' symbol for username
+    const emailParts = email.split('@');
+    const username = emailParts[0];  // This will be used as the username
+
+    try {
+      // Check if email or username already exists in the User collection
+      const existingUser = await User.findOne({ $or: [{ email }] });
+      if (existingUser) {
+        return res.status(400).json({
+          status: 400,
+          message: 'Email  already exists. Please use a different email .',
+        });
       }
-    
-      const {
+
+      const existingAdmission = await Admission.findOne({ admissionNo });
+      if (existingAdmission) {
+        return res.status(400).json({ status: 400, message: 'Admission No already exists' });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const newUser = new User({
+        email,
+        password: hashedPassword,
+        username: username,
+        principalAccess: false,
+        teacherAccess: false,
+        studentAccess: true,
+      });
+
+      const savedUser = await newUser.save();
+
+      const newAdmission = new Admission({
         admissionNo,
         rollNo,
         class: studentClass,
@@ -201,73 +258,25 @@ router.post(
         firstName,
         lastName,
         gender,
-        dateOfBirth,
+        dateOfBirth: new Date(dateOfBirth),
         category,
         religion,
         caste,
         mobileNumber,
         email,
-        admissionDate,
+        password: hashedPassword,
+        admissionDate: new Date(admissionDate),
         bloodGroup,
         houseaddress,
         height,
         weight,
-        measurementDate,
+        measurementDate: measurementDate ? new Date(measurementDate) : null,
         medicalHistory,
-        password,
-        feeAmount,
-      } = req.body;
-    
-      try {
-      
-        const existingAdmission = await Admission.findOne({ admissionNo });
-        if (existingAdmission) {
-          return res.status(400).json({ status: 400, message: 'Admission No already exists' });
-        }
-   
-     const salt = await bcrypt.genSalt(10);
-     const hashedPassword = await bcrypt.hash(password, salt);
-       
-        const newUser = new User({
-          email,
-          password:hashedPassword, 
-          username: `${firstName} ${lastName}`,
-          principalAccess: false,
-          teacherAccess: false,
-          studentAccess: true,
-        });
-    
-        const savedUser = await newUser.save();
-    
-      
-        const newAdmission = new Admission({
-          admissionNo,
-          rollNo,
-          class: studentClass,
-          section,
-          firstName,
-          lastName,
-          gender,
-          dateOfBirth: new Date(dateOfBirth),
-          category,
-          religion,
-          caste,
-          mobileNumber,
-          email,
-          password:hashedPassword,
-          admissionDate: new Date(admissionDate),
-          bloodGroup,
-          houseaddress,
-          height,
-          weight,
-          measurementDate: measurementDate ? new Date(measurementDate) : null,
-          medicalHistory,
-          feeAmount,
-          userId: savedUser._id,
-        });
-    
-        const savedAdmission = await newAdmission.save();
-    
+        feeAmount, // Keep feeAmount from request body
+        userId: savedUser._id,
+      });
+
+      const savedAdmission = await newAdmission.save();
 
       const newStudent = new Student({
         admissionNo,
@@ -288,30 +297,27 @@ router.post(
 
       const savedStudent = await newStudent.save();
 
-    
       const newAttendance = new Attendance({
-        studentId: savedStudent._id,  
+        studentId: savedStudent._id,
         admissionNo,
         class: studentClass,
         section: section,
         name: `${firstName} ${lastName}`,
         rollNo,
         attendanceDate: new Date(),
-        attendanceStatus: 'Present', 
+        attendanceStatus: 'Present',
       });
 
-      await newAttendance.save(); 
+      await newAttendance.save();
 
-   
       res.status(200).json({
         status: 200,
         message: 'Admission, student, and attendance added successfully.',
         admission: savedAdmission,
         student: savedStudent,
         user: savedUser,
-        attendance: newAttendance, 
+        attendance: newAttendance,
       });
-
     } catch (error) {
       console.error('Error adding admission details:', error);
       res.status(400).json({ status: 400, message: 'Error adding admission details', error });
@@ -319,4 +325,5 @@ router.post(
   }
 );
 
-module.exports = router;
+
+module.exports = router;  
