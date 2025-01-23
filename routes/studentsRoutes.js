@@ -667,17 +667,33 @@ router.post('/bulk-delete', async (req, res) => {
 // });
 
 
-router.delete("/delete/:id", async (req, res) => {
-  const { id } = req.params;
+
+router.delete("/delete", async (req, res) => {
+  const { ids } = req.body; // Expecting an array of IDs in the request body
+
+  // Validate the input
+  if (!ids || (Array.isArray(ids) && ids.length === 0)) {
+    return res.status(400).json({ message: "No IDs provided" });
+  }
+
+  // Ensure all IDs are valid MongoDB ObjectIds
+  const invalidIds = ids.filter(id => !mongoose.Types.ObjectId.isValid(id));
+  if (invalidIds.length > 0) {
+    return res.status(400).json({ message: "Invalid ID format", invalidIds });
+  }
+
   try {
-    const result = await StudentModel.findByIdAndDelete(id);
-    if (result) {
-      res.status(204).send(); 
+    // If a single ID is provided, convert it to an array for uniform processing
+    const result = await StudentModel.deleteMany({ _id: { $in: ids } });
+
+    if (result.deletedCount > 0) {
+      return res.status(204).send(); 
     } else {
-      res.status(404).json({ message: "Student not found" });
+      return res.status(404).json({ message: "No students found for the provided IDs" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("Error deleting students:", error); // Log the error
+    return res.status(500).json({ message: "Server error", error });
   }
 });
 router.delete(
