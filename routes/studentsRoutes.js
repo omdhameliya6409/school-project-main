@@ -571,7 +571,7 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
 //     });
 //   }
 // });
-router.delete('/bulk-delete', authMiddleware(['principalAccess', 'teacherAccess']), async (req, res) => {
+router.delete('/bulk-delete', async (req, res) => {
   const { studentId, studentClass, section } = req.query;
 
   if (!studentClass || !section) {
