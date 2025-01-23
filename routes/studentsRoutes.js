@@ -571,13 +571,15 @@ router.get('/bulk-delete/filter', authMiddleware(['principalAccess', 'teacherAcc
 //     });
 //   }
 // });
-router.delete('/bulk-delete', async (req, res) => {
-  const { studentId, studentClass, section } = req.query;
+
+
+router.post('/bulk-delete', async (req, res) => {
+  const { studentId, studentClass, section } = req.body;
 
   if (!studentClass || !section) {
     return res.status(400).json({
       status: 400,
-      message: 'Invalid input: Provide class and section as query parameters',
+      message: 'Invalid input: Provide class and section in the request body',
     });
   }
 
@@ -589,8 +591,19 @@ router.delete('/bulk-delete', async (req, res) => {
 
   // If studentId is provided, add it to the query to filter by specific student IDs
   if (studentId) {
-    const studentIds = studentId.split(',').map(id => new mongoose.Types.ObjectId(id.trim()));
-    query._id = { $in: studentIds };
+    const studentIds = studentId.split(',').map(id => id.trim());
+    
+    // Validate ObjectId format
+    const validStudentIds = studentIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    
+    if (validStudentIds.length === 0) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid studentId: Must be a valid ObjectId',
+      });
+    }
+
+    query._id = { $in: validStudentIds.map(id => new mongoose.Types.ObjectId(id)) };
   }
 
   try {
@@ -626,7 +639,6 @@ router.delete('/bulk-delete', async (req, res) => {
     });
   }
 });
-
 
 
 // router.delete("/bulk-delete-by-class-section", async (req, res) => {
