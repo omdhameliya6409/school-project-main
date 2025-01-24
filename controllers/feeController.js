@@ -964,13 +964,15 @@ exports.collectFee = [
 
 
 
+
+
 exports.getFeeDetails = [
   authMiddleware(["principalAccess", "teacherAccess"]), 
   async (req, res) => {
-    const { studentId } = req.params;
+    const { admissionNo } = req.params;
 
     try {
-      const fee = await Fee.findOne({ studentId }).populate('studentId', 'name class section');
+      const fee = await Fee.findOne({ admissionNo }).populate('studentId', 'name class section');
       if (!fee) {
         return res.status(404).json({ status: 404, message: 'No fee record found for the student' });
       }
@@ -982,6 +984,7 @@ exports.getFeeDetails = [
     }
   }
 ];
+
 
 exports.searchPaymentsByPaymentId = [
   authMiddleware(["principalAccess", "teacherAccess"]),
